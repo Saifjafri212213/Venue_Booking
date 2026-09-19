@@ -92,6 +92,42 @@ const bookingSchema = new mongoose.Schema(
       enum: ['Pending', 'Approved', 'Rejected', 'Completed', 'Cancelled'],
       default: 'Pending'
     },
+    // --- PAYMENT FIRST WORKFLOW FIELDS ---
+    paymentStatus: {
+      type: String,
+      enum: ['unpaid', 'pending_verification', 'paid', 'rejected'],
+      default: 'unpaid'
+    },
+    paymentAmount: {
+      type: Number,
+      default: function () {
+        return this.totalCost || 0;
+      }
+    },
+    paymentExpiresAt: {
+      type: Date
+    },
+    utrNumber: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      sparse: true,
+      default: null
+    },
+    paymentScreenshot: {
+      type: String,
+      default: ''
+    },
+    paymentSubmittedAt: {
+      type: Date
+    },
+    paymentVerifiedAt: {
+      type: Date
+    },
+    paymentVerifiedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
     adminRemarks: {
       type: String,
       trim: true,
@@ -134,6 +170,12 @@ bookingSchema.virtual('formattedDate').get(function () {
   if (!this.bookingDate) return '';
   const d = new Date(this.bookingDate);
   return d.toISOString().split('T')[0];
+});
+
+// Helper virtual: is payment window currently active
+bookingSchema.virtual('isPaymentExpired').get(function () {
+  if (this.paymentStatus !== 'unpaid' || !this.paymentExpiresAt) return false;
+  return new Date() > new Date(this.paymentExpiresAt);
 });
 
 module.exports = mongoose.model('Booking', bookingSchema);

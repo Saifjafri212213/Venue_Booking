@@ -11,7 +11,7 @@
         My Bookings & Reservations
       </h1>
       <p class="text-xs text-slate-500">
-        Track your event booking requests, view confirmation passes, or manage cancellations.
+        Track your event reservations, submit payment proof, monitor administrative approvals, or download campus event passes.
       </p>
     </div>
 
@@ -52,9 +52,9 @@
               <th class="py-3.5 px-4">Reference / Event</th>
               <th class="py-3.5 px-4">Venue & Location</th>
               <th class="py-3.5 px-4">Date & Slot</th>
-              <th class="py-3.5 px-4">Attendees</th>
-              <th class="py-3.5 px-4">Total Cost</th>
-              <th class="py-3.5 px-4">Status</th>
+              <th class="py-3.5 px-4">Amount</th>
+              <th class="py-3.5 px-4">Payment Status</th>
+              <th class="py-3.5 px-4">Booking Status</th>
               <th class="py-3.5 px-4 text-right">Actions</th>
             </tr>
           </thead>
@@ -62,17 +62,20 @@
             <% bookings.forEach(b => { %>
               <tr class="hover:bg-slate-50/70 transition-colors">
                 
+                <!-- Event -->
                 <td class="py-4 px-4">
                   <span class="font-mono text-[10px] font-extrabold text-brand-600 block"><%= b.bookingReference %></span>
                   <span class="font-bold text-slate-900 text-sm block"><%= b.eventTitle %></span>
-                  <span class="text-[10px] text-slate-400"><%= b.eventType %></span>
+                  <span class="text-[10px] text-slate-400"><%= b.eventType %> &bull; <%= b.expectedAttendees %> Pax</span>
                 </td>
 
+                <!-- Venue -->
                 <td class="py-4 px-4">
                   <span class="font-bold text-slate-800 block"><%= b.venue ? b.venue.name : 'N/A' %></span>
                   <span class="text-[11px] text-slate-500"><%= b.venue ? b.venue.location : '' %></span>
                 </td>
 
+                <!-- Date & Slot -->
                 <td class="py-4 px-4 whitespace-nowrap">
                   <span class="font-semibold text-slate-800 block">
                     <i class="fa-regular fa-calendar text-[10px] text-slate-400 mr-1"></i>
@@ -81,14 +84,48 @@
                   <span class="font-mono text-[11px] text-slate-500"><%= b.startTime %> - <%= b.endTime %> (<%= b.durationHours %> hrs)</span>
                 </td>
 
-                <td class="py-4 px-4 font-semibold text-slate-700">
-                  <%= b.expectedAttendees %> People
-                </td>
-
-                <td class="py-4 px-4 font-extrabold text-emerald-600 text-sm">
+                <!-- Amount -->
+                <td class="py-4 px-4 font-extrabold text-emerald-600 text-sm whitespace-nowrap">
                   $<%= b.totalCost %>
                 </td>
 
+                <!-- Payment Status -->
+                <td class="py-4 px-4">
+                  <% if (b.paymentStatus === 'paid') { %>
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1 w-max">
+                      <i class="fa-solid fa-circle-check text-emerald-600 text-[10px]"></i> Paid & Verified
+                    </span>
+                  <% } else if (b.paymentStatus === 'pending_verification') { %>
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 flex items-center gap-1 w-max">
+                      <i class="fa-solid fa-clock text-amber-600 text-[10px]"></i> Pending Verification
+                    </span>
+                    <% if (b.utrNumber) { %>
+                      <span class="text-[10px] font-mono text-slate-500 block mt-1">UTR: <%= b.utrNumber %></span>
+                    <% } %>
+                  <% } else if (b.paymentStatus === 'rejected') { %>
+                    <div class="space-y-1">
+                      <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 flex items-center gap-1 w-max">
+                        <i class="fa-solid fa-circle-xmark text-rose-600 text-[10px]"></i> Payment Rejected
+                      </span>
+                      <% if (b.rejectionReason) { %>
+                        <p class="text-[10px] text-rose-600 font-medium max-w-xs leading-tight"><%= b.rejectionReason %></p>
+                      <% } %>
+                    </div>
+                  <% } else { %>
+                    <div class="space-y-1">
+                      <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 flex items-center gap-1 w-max">
+                        <i class="fa-solid fa-hourglass-start text-slate-500 text-[10px]"></i> Unpaid Slot Hold
+                      </span>
+                      <% if (b.paymentExpiresAt && new Date(b.paymentExpiresAt) > new Date()) { %>
+                        <span class="text-[10px] text-amber-600 font-semibold block">15-min hold active</span>
+                      <% } else { %>
+                        <span class="text-[10px] text-slate-400 block">Hold expired</span>
+                      <% } %>
+                    </div>
+                  <% } %>
+                </td>
+
+                <!-- Booking Status -->
                 <td class="py-4 px-4">
                   <% if (b.status === 'Approved') { %>
                     <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 flex items-center gap-1 w-max">
@@ -113,10 +150,21 @@
                   <% } %>
                 </td>
 
-                <td class="py-4 px-4 text-right whitespace-nowrap">
-                  <a href="/bookings/<%= b._id %>" class="inline-flex items-center gap-1 py-1 px-3 rounded-lg text-xs font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 transition-colors">
-                    Pass & Details &rarr;
-                  </a>
+                <!-- Actions -->
+                <td class="py-4 px-4 text-right whitespace-nowrap space-y-1">
+                  <% if (b.paymentStatus === 'unpaid') { %>
+                    <a href="/bookings/<%= b._id %>/payment" class="inline-flex items-center gap-1 py-1 px-3 rounded-lg text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-colors">
+                      <i class="fa-solid fa-credit-card text-[10px]"></i> Pay Now &rarr;
+                    </a>
+                  <% } else if (b.paymentStatus === 'rejected') { %>
+                    <a href="/bookings/<%= b._id %>/retry-payment" class="inline-flex items-center gap-1 py-1 px-3 rounded-lg text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-sm transition-colors">
+                      <i class="fa-solid fa-rotate-right text-[10px]"></i> Retry Payment
+                    </a>
+                  <% } else { %>
+                    <a href="/bookings/<%= b._id %>" class="inline-flex items-center gap-1 py-1 px-3 rounded-lg text-xs font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 transition-colors">
+                      Pass & Details &rarr;
+                    </a>
+                  <% } %>
                 </td>
 
               </tr>

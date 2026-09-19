@@ -8,6 +8,7 @@ const User = require('./models/User');
 const Venue = require('./models/Venue');
 const Booking = require('./models/Booking');
 const MaintenanceBlock = require('./models/MaintenanceBlock');
+const PaymentSetting = require('./models/PaymentSetting');
 
 const seedData = async () => {
   try {
@@ -21,7 +22,8 @@ const seedData = async () => {
       User.deleteMany({}),
       Venue.deleteMany({}),
       Booking.deleteMany({}),
-      MaintenanceBlock.deleteMany({})
+      MaintenanceBlock.deleteMany({}),
+      PaymentSetting.deleteMany({})
     ]);
     console.log(' Cleared old collections.');
 
@@ -290,6 +292,12 @@ const seedData = async () => {
         durationHours: 8,
         hourlyRate: venues[0].hourlyRate,
         totalCost: 8 * venues[0].hourlyRate,
+        paymentAmount: 8 * venues[0].hourlyRate,
+        paymentStatus: 'paid',
+        utrNumber: 'SBI892019283019',
+        paymentSubmittedAt: new Date(Date.now() - 24 * 3600 * 1000),
+        paymentVerifiedAt: new Date(),
+        paymentVerifiedBy: adminUser._id,
         specialFacilities: ['Projector & Screen', 'Surround Sound Audio', 'Stage Lighting', 'Central AC'],
         status: 'Approved',
         approvedAt: new Date(),
@@ -310,6 +318,12 @@ const seedData = async () => {
         durationHours: 4,
         hourlyRate: venues[1].hourlyRate,
         totalCost: 4 * venues[1].hourlyRate,
+        paymentAmount: 4 * venues[1].hourlyRate,
+        paymentStatus: 'paid',
+        utrNumber: 'HDFC90192837465',
+        paymentSubmittedAt: new Date(Date.now() - 12 * 3600 * 1000),
+        paymentVerifiedAt: new Date(),
+        paymentVerifiedBy: adminUser._id,
         specialFacilities: ['Video Conferencing', 'Podiums & Microphones', 'Central AC'],
         status: 'Approved',
         approvedAt: new Date(),
@@ -332,6 +346,12 @@ const seedData = async () => {
         durationHours: 4,
         hourlyRate: venues[2].hourlyRate,
         totalCost: 4 * venues[2].hourlyRate,
+        paymentAmount: 4 * venues[2].hourlyRate,
+        paymentStatus: 'paid',
+        utrNumber: 'ICIC83920194820',
+        paymentSubmittedAt: new Date(Date.now() - 6 * 3600 * 1000),
+        paymentVerifiedAt: new Date(),
+        paymentVerifiedBy: adminUser._id,
         specialFacilities: ['Stage Lighting', 'Surround Sound Audio', 'Parking Access'],
         status: 'Approved',
         approvedAt: new Date(),
@@ -352,6 +372,12 @@ const seedData = async () => {
         durationHours: 3,
         hourlyRate: venues[3].hourlyRate,
         totalCost: 3 * venues[3].hourlyRate,
+        paymentAmount: 3 * venues[3].hourlyRate,
+        paymentStatus: 'paid',
+        utrNumber: 'UPI940291048201',
+        paymentSubmittedAt: new Date(Date.now() - 5 * 3600 * 1000),
+        paymentVerifiedAt: new Date(),
+        paymentVerifiedBy: adminUser._id,
         specialFacilities: ['Projector & Screen', 'High-Speed Wi-Fi', 'Central AC'],
         status: 'Approved',
         approvedAt: new Date(),
@@ -372,6 +398,12 @@ const seedData = async () => {
         durationHours: 9,
         hourlyRate: venues[5].hourlyRate,
         totalCost: 9 * venues[5].hourlyRate,
+        paymentAmount: 9 * venues[5].hourlyRate,
+        paymentStatus: 'paid',
+        utrNumber: 'AXIS74920194820',
+        paymentSubmittedAt: new Date(Date.now() - 4 * 3600 * 1000),
+        paymentVerifiedAt: new Date(),
+        paymentVerifiedBy: adminUser._id,
         specialFacilities: ['High-Speed Wi-Fi', 'Central AC'],
         status: 'Approved',
         approvedAt: new Date(),
@@ -391,13 +423,19 @@ const seedData = async () => {
         durationHours: 4,
         hourlyRate: venues[6].hourlyRate,
         totalCost: 4 * venues[6].hourlyRate,
+        paymentAmount: 4 * venues[6].hourlyRate,
+        paymentStatus: 'paid',
+        utrNumber: 'SBI739201948201',
+        paymentSubmittedAt: new Date(Date.now() - 3 * 3600 * 1000),
+        paymentVerifiedAt: new Date(),
+        paymentVerifiedBy: adminUser._id,
         specialFacilities: ['Catering Pantry', 'Central AC', 'Stage Lighting'],
         status: 'Approved',
         approvedAt: new Date(),
         approvedBy: adminUser._id
       },
 
-      // --- PENDING APPROVAL REQUESTS ---
+      // --- PENDING APPROVAL & VERIFICATION REQUESTS ---
       {
         bookingReference: 'EVT-2026-1007',
         venue: venues[1]._id, // Emerald Conference Center
@@ -412,6 +450,10 @@ const seedData = async () => {
         durationHours: 3,
         hourlyRate: venues[1].hourlyRate,
         totalCost: 3 * venues[1].hourlyRate,
+        paymentAmount: 3 * venues[1].hourlyRate,
+        paymentStatus: 'pending_verification',
+        utrNumber: 'PAYTM83920194829',
+        paymentSubmittedAt: new Date(),
         specialFacilities: ['Projector & Screen', 'Video Conferencing'],
         status: 'Pending'
       },
@@ -429,6 +471,10 @@ const seedData = async () => {
         durationHours: 5,
         hourlyRate: venues[0].hourlyRate,
         totalCost: 5 * venues[0].hourlyRate,
+        paymentAmount: 5 * venues[0].hourlyRate,
+        paymentStatus: 'pending_verification',
+        utrNumber: 'GPAY92019482019',
+        paymentSubmittedAt: new Date(),
         specialFacilities: ['Stage Lighting', 'Surround Sound Audio', 'VIP Green Room'],
         status: 'Pending'
       },
@@ -448,6 +494,9 @@ const seedData = async () => {
         durationHours: 3,
         hourlyRate: venues[0].hourlyRate,
         totalCost: 3 * venues[0].hourlyRate,
+        paymentAmount: 3 * venues[0].hourlyRate,
+        paymentStatus: 'paid',
+        utrNumber: 'SBI19203948572',
         specialFacilities: ['Projector & Screen', 'Surround Sound Audio'],
         status: 'Completed',
         approvedAt: pastWeek,
@@ -467,6 +516,9 @@ const seedData = async () => {
         durationHours: 3,
         hourlyRate: venues[4].hourlyRate,
         totalCost: 3 * venues[4].hourlyRate,
+        paymentAmount: 3 * venues[4].hourlyRate,
+        paymentStatus: 'paid',
+        utrNumber: 'ICIC93847291048',
         specialFacilities: ['Video Conferencing', 'Central AC'],
         status: 'Completed',
         approvedAt: yesterday,
@@ -488,6 +540,9 @@ const seedData = async () => {
         durationHours: 4,
         hourlyRate: venues[0].hourlyRate,
         totalCost: 4 * venues[0].hourlyRate,
+        paymentAmount: 4 * venues[0].hourlyRate,
+        paymentStatus: 'rejected',
+        utrNumber: 'INVALID_UTR_000',
         status: 'Rejected',
         rejectedAt: new Date(),
         rejectedBy: adminUser._id,
@@ -520,6 +575,20 @@ const seedData = async () => {
       }
     ]);
     console.log(` Created ${maintenance.length} active maintenance blackout blocks.`);
+
+    // 6. Create Active Payment Setting
+    const paymentSetting = await PaymentSetting.create({
+      accountHolderName: 'Campus Facilities & Venue Administration',
+      bankName: 'State Bank of India',
+      accountNumber: '40928172901',
+      ifscCode: 'SBIN0001234',
+      branchName: 'University Main Campus Branch',
+      upiId: 'campusfacilities@sbi',
+      instructions: 'Please transfer the exact booking fee and submit your 12-digit UTR/UPI transaction reference.',
+      isActive: true,
+      updatedBy: adminUser._id
+    });
+    console.log(` Created default active PaymentSetting (${paymentSetting.upiId}).`);
 
     console.log('\n=================================================');
     console.log(' DATABASE SEEDING COMPLETED SUCCESSFULLY!');

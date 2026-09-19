@@ -1,12 +1,14 @@
 /**
  * Admin / Venue Manager Controller
- * Handles venue CRUD, booking approvals, status updates, maintenance date blocking,
- * utilization analytics, and revenue metrics.
+ * Handles venue CRUD, booking approvals, payment verifications, payment gateway settings,
+ * maintenance date blocking, utilization analytics, and revenue metrics.
  */
 const Venue = require('../models/Venue');
 const Booking = require('../models/Booking');
 const MaintenanceBlock = require('../models/MaintenanceBlock');
+const PaymentSetting = require('../models/PaymentSetting');
 const User = require('../models/User');
+const { bufferToDataUri } = require('../middleware/upload');
 
 // Helper to get start and end of a specific date
 const getDayBounds = (date = new Date()) => {
@@ -30,6 +32,7 @@ exports.getDashboard = async (req, res) => {
       pendingRequestsCount,
       approvedBookingsCount,
       completedBookingsCount,
+      pendingVerificationCount,
       todayEvents,
       allApprovedOrCompleted
     ] = await Promise.all([
@@ -39,6 +42,7 @@ exports.getDashboard = async (req, res) => {
       Booking.countDocuments({ status: 'Pending' }),
       Booking.countDocuments({ status: 'Approved' }),
       Booking.countDocuments({ status: 'Completed' }),
+      Booking.countDocuments({ paymentStatus: 'pending_verification' }),
       Booking.find({
         bookingDate: { $gte: todayBounds.start, $lte: todayBounds.end },
         status: { $in: ['Approved', 'Completed'] }
@@ -81,7 +85,6 @@ exports.getDashboard = async (req, res) => {
       );
       const totalHours = venueBookings.reduce((sum, b) => sum + (b.durationHours || 0), 0);
       const venueRevenue = venueBookings.reduce((sum, b) => sum + (b.totalCost || 0), 0);
-      // Assuming a 30-day baseline of 14 operating hours/day = 420 available hours
       const baseAvailableHours = 420;
       const utilizationRate = Math.min(100, Math.round((totalHours / baseAvailableHours) * 100));
 
@@ -98,21 +101,12 @@ exports.getDashboard = async (req, res) => {
       };
     });
 
-    // Chart Data: Utilization & Revenue
     const chartLabels = venueStats.map((v) => v.code || v.name.substring(0, 12));
     const chartUtilization = venueStats.map((v) => v.utilizationRate);
     const chartRevenue = venueStats.map((v) => v.revenue);
 
-    // Average Utilization
-    const avgUtilization =
-      venueStats.length > 0
-        ? Math.round(
-            venueStats.reduce((sum, v) => sum + v.utilizationRate, 0) / venueStats.length
-          )
-        : 0;
-
     res.render('admin/dashboard', {
-      title: 'Venue Manager & Admin Dashboard',
+      title: 'Admin Control Center - Campus Venue Booking',
       metrics: {
         totalVenues,
         activeVenues,
@@ -120,41 +114,39 @@ exports.getDashboard = async (req, res) => {
         pendingRequestsCount,
         approvedBookingsCount,
         completedBookingsCount,
-        todayEventsCount: todayEvents.length,
+        pendingVerificationCount,
         totalRevenue,
         pendingRevenue,
-        avgUtilization
+        todayEventsCount: todayEvents.length
       },
-      todayEvents,
       pendingBookings,
       upcomingEvents,
+      todayEvents,
       venueStats,
-      chartData: {
+      charts: {
         labels: JSON.stringify(chartLabels),
         utilization: JSON.stringify(chartUtilization),
         revenue: JSON.stringify(chartRevenue)
       }
     });
   } catch (error) {
-    console.error('Error in Admin Dashboard:', error);
-    req.flash('error_msg', 'Unable to load Admin dashboard.');
+    console.error('Error in Admin Dashboard controller:', error);
+    req.flash('error_msg', 'Failed to load administrator dashboard data.');
     res.redirect('/');
   }
 };
 
-// Venue List (Admin Management View)
+// Render Admin Venue List
 exports.getVenuesList = async (req, res) => {
   try {
     const venues = await Venue.find().sort({ createdAt: -1 });
 
-    // Aggregate booking counts per venue
     const bookingCounts = await Booking.aggregate([
       { $group: { _id: '$venue', count: { $sum: 1 } } }
     ]);
-
     const countMap = {};
-    bookingCounts.forEach((item) => {
-      countMap[item._id.toString()] = item.count;
+    bookingCounts.forEach((bc) => {
+      if (bc._id) countMap[bc._id.toString()] = bc.count;
     });
 
     const enrichedVenues = venues.map((v) => ({
@@ -163,93 +155,114 @@ exports.getVenuesList = async (req, res) => {
     }));
 
     res.render('admin/venues/index', {
-      title: 'Manage Venues - Admin Control',
+      title: 'Manage Campus Venues - Admin',
       venues: enrichedVenues
     });
   } catch (error) {
     console.error('Error fetching venues for admin:', error);
-    req.flash('error_msg', 'Could not retrieve venues.');
+    req.flash('error_msg', 'Could not retrieve venues catalogue.');
     res.redirect('/admin/dashboard');
   }
 };
 
-// Render Create Venue Form
+// Render Venue Creation Form
 exports.getVenueCreateForm = (req, res) => {
   res.render('admin/venues/form', {
-    title: 'Add New Campus Venue',
+    title: 'Add New Campus Venue - Admin',
     venue: null,
-    isEdit: false
+    isEdit: false,
+    availableFacilities: [
+      'Projector & Screen',
+      'Surround Sound Audio',
+      'Stage Lighting',
+      'Central AC',
+      'High-Speed Wi-Fi',
+      'Podiums & Microphones',
+      'VIP Green Room',
+      'Wheelchair Accessible',
+      'Parking Access',
+      'Tiered Seating',
+      'Smart Digital Podium',
+      'Workstations & High-End GPUs',
+      'Live Streaming Setup',
+      'Conference Call & Zoom Room'
+    ]
   });
 };
 
-// Handle Create Venue
+// Handle Venue Creation
 exports.postCreateVenue = async (req, res) => {
-  try {
-    const {
-      name,
-      code,
-      category,
-      capacity,
-      location,
-      building,
-      floor,
-      hourlyRate,
-      facilities,
-      featuredImage,
-      description,
-      openTime,
-      closeTime,
-      rules,
-      featured,
-      status
-    } = req.body;
+  const {
+    name,
+    code,
+    category,
+    capacity,
+    location,
+    building,
+    floor,
+    hourlyRate,
+    featuredImage,
+    description,
+    openTime,
+    closeTime,
+    facilities,
+    rules,
+    featured,
+    status
+  } = req.body;
 
-    const facilityList = Array.isArray(facilities)
+  try {
+    const existing = await Venue.findOne({ code: code.toUpperCase().trim() });
+    if (existing) {
+      req.flash('error_msg', `Venue code "${code}" already in use by "${existing.name}".`);
+      return res.redirect('/admin/venues/new');
+    }
+
+    const facilitiesArray = Array.isArray(facilities)
       ? facilities
-      : typeof facilities === 'string'
-      ? facilities.split(',').map((f) => f.trim()).filter(Boolean)
+      : facilities
+      ? [facilities]
       : [];
 
-    const rulesList = typeof rules === 'string'
-      ? rules.split('\n').map((r) => r.trim()).filter(Boolean)
+    const rulesArray = rules
+      ? rules
+          .split('\n')
+          .map((r) => r.trim())
+          .filter((r) => r.length > 0)
       : [];
 
     const newVenue = new Venue({
       name: name.trim(),
-      code: code.trim().toUpperCase(),
+      code: code.toUpperCase().trim(),
       category: category || 'Auditorium',
       capacity: Number(capacity),
       location: location.trim(),
-      building: building ? building.trim() : 'Main Complex',
+      building: building ? building.trim() : 'Academic Wing',
       floor: floor ? floor.trim() : 'Ground Floor',
       hourlyRate: Number(hourlyRate),
-      facilities: facilityList,
+      description: description.trim(),
       featuredImage: featuredImage || 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1200&q=80',
-      description: description ? description.trim() : '',
+      facilities: facilitiesArray,
       operatingHours: {
         openTime: openTime || '08:00',
         closeTime: closeTime || '22:00'
       },
-      rules: rulesList.length > 0 ? rulesList : undefined,
+      rules: rulesArray,
       featured: featured === 'on' || featured === 'true',
       status: status || 'active'
     });
 
     await newVenue.save();
-    req.flash('success_msg', `Venue "${newVenue.name}" has been created successfully!`);
+    req.flash('success_msg', `Venue "${newVenue.name}" successfully created and made available for reservations!`);
     res.redirect('/admin/venues');
   } catch (error) {
     console.error('Error creating venue:', error);
     req.flash('error_msg', error.message || 'Failed to create venue.');
-    res.render('admin/venues/form', {
-      title: 'Add New Campus Venue',
-      venue: req.body,
-      isEdit: false
-    });
+    res.redirect('/admin/venues/new');
   }
 };
 
-// Render Edit Venue Form
+// Render Venue Edit Form
 exports.getVenueEditForm = async (req, res) => {
   try {
     const venue = await Venue.findById(req.params.id);
@@ -257,76 +270,107 @@ exports.getVenueEditForm = async (req, res) => {
       req.flash('error_msg', 'Venue not found.');
       return res.redirect('/admin/venues');
     }
+
     res.render('admin/venues/form', {
-      title: `Edit Venue: ${venue.name}`,
+      title: `Edit Venue: ${venue.name} - Admin`,
       venue,
-      isEdit: true
+      isEdit: true,
+      availableFacilities: [
+        'Projector & Screen',
+        'Surround Sound Audio',
+        'Stage Lighting',
+        'Central AC',
+        'High-Speed Wi-Fi',
+        'Podiums & Microphones',
+        'VIP Green Room',
+        'Wheelchair Accessible',
+        'Parking Access',
+        'Tiered Seating',
+        'Smart Digital Podium',
+        'Workstations & High-End GPUs',
+        'Live Streaming Setup',
+        'Conference Call & Zoom Room'
+      ]
     });
   } catch (error) {
-    console.error('Error loading edit form:', error);
-    req.flash('error_msg', 'Could not open venue edit form.');
+    console.error('Error fetching venue for editing:', error);
+    req.flash('error_msg', 'Unable to retrieve venue for edit.');
     res.redirect('/admin/venues');
   }
 };
 
-// Handle Update Venue
+// Handle Venue Update
 exports.postUpdateVenue = async (req, res) => {
+  const {
+    name,
+    code,
+    category,
+    capacity,
+    location,
+    building,
+    floor,
+    hourlyRate,
+    featuredImage,
+    description,
+    openTime,
+    closeTime,
+    facilities,
+    rules,
+    featured,
+    status
+  } = req.body;
+
   try {
-    const {
-      name,
-      code,
-      category,
-      capacity,
-      location,
-      building,
-      floor,
-      hourlyRate,
-      facilities,
-      featuredImage,
-      description,
-      openTime,
-      closeTime,
-      rules,
-      featured,
-      status
-    } = req.body;
+    const venue = await Venue.findById(req.params.id);
+    if (!venue) {
+      req.flash('error_msg', 'Venue not found.');
+      return res.redirect('/admin/venues');
+    }
 
-    const facilityList = Array.isArray(facilities)
+    const duplicate = await Venue.findOne({
+      code: code.toUpperCase().trim(),
+      _id: { $ne: venue._id }
+    });
+
+    if (duplicate) {
+      req.flash('error_msg', `Venue code "${code}" already in use by another venue.`);
+      return res.redirect(`/admin/venues/${venue._id}/edit`);
+    }
+
+    const facilitiesArray = Array.isArray(facilities)
       ? facilities
-      : typeof facilities === 'string'
-      ? facilities.split(',').map((f) => f.trim()).filter(Boolean)
+      : facilities
+      ? [facilities]
       : [];
 
-    const rulesList = typeof rules === 'string'
-      ? rules.split('\n').map((r) => r.trim()).filter(Boolean)
+    const rulesArray = rules
+      ? rules
+          .split('\n')
+          .map((r) => r.trim())
+          .filter((r) => r.length > 0)
       : [];
 
-    await Venue.findByIdAndUpdate(
-      req.params.id,
-      {
-        name: name.trim(),
-        code: code.trim().toUpperCase(),
-        category,
-        capacity: Number(capacity),
-        location: location.trim(),
-        building: building ? building.trim() : 'Main Complex',
-        floor: floor ? floor.trim() : 'Ground Floor',
-        hourlyRate: Number(hourlyRate),
-        facilities: facilityList,
-        featuredImage: featuredImage || 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1200&q=80',
-        description: description ? description.trim() : '',
-        operatingHours: {
-          openTime: openTime || '08:00',
-          closeTime: closeTime || '22:00'
-        },
-        rules: rulesList.length > 0 ? rulesList : undefined,
-        featured: featured === 'on' || featured === 'true',
-        status: status || 'active'
-      },
-      { runValidators: true }
-    );
+    venue.name = name.trim();
+    venue.code = code.toUpperCase().trim();
+    venue.category = category;
+    venue.capacity = Number(capacity);
+    venue.location = location.trim();
+    venue.building = building ? building.trim() : venue.building;
+    venue.floor = floor ? floor.trim() : venue.floor;
+    venue.hourlyRate = Number(hourlyRate);
+    venue.description = description.trim();
+    if (featuredImage) venue.featuredImage = featuredImage.trim();
+    venue.facilities = facilitiesArray;
+    venue.operatingHours = {
+      openTime: openTime || '08:00',
+      closeTime: closeTime || '22:00'
+    };
+    venue.rules = rulesArray;
+    venue.featured = featured === 'on' || featured === 'true';
+    venue.status = status || 'active';
 
-    req.flash('success_msg', 'Venue updated successfully!');
+    await venue.save();
+    req.flash('success_msg', `Venue "${venue.name}" updated successfully.`);
     res.redirect('/admin/venues');
   } catch (error) {
     console.error('Error updating venue:', error);
@@ -335,7 +379,7 @@ exports.postUpdateVenue = async (req, res) => {
   }
 };
 
-// Handle Delete / Archive Venue
+// Handle Venue Delete / Deactivate
 exports.postDeleteVenue = async (req, res) => {
   try {
     const venue = await Venue.findById(req.params.id);
@@ -344,14 +388,12 @@ exports.postDeleteVenue = async (req, res) => {
       return res.redirect('/admin/venues');
     }
 
-    // Check if there are active approved bookings
     const activeBookings = await Booking.countDocuments({
       venue: venue._id,
       status: { $in: ['Approved', 'Pending'] }
     });
 
     if (activeBookings > 0) {
-      // Instead of hard delete, set to inactive to preserve booking history integrity
       venue.status = 'inactive';
       await venue.save();
       req.flash(
@@ -371,14 +413,17 @@ exports.postDeleteVenue = async (req, res) => {
   }
 };
 
-// Handle Booking Requests Management & Approval Inbox
+// Handle Booking Requests Management & Approval Inbox with Payment Statuses
 exports.getBookingsList = async (req, res) => {
   try {
-    const { status, venueId } = req.query;
+    const { status, venueId, paymentStatus } = req.query;
     const filter = {};
 
     if (status && status !== 'All') {
       filter.status = status;
+    }
+    if (paymentStatus && paymentStatus !== 'All') {
+      filter.paymentStatus = paymentStatus;
     }
     if (venueId && venueId !== 'All') {
       filter.venue = venueId;
@@ -389,33 +434,39 @@ exports.getBookingsList = async (req, res) => {
         .populate('venue')
         .populate('organiser', 'name email organization department phone')
         .populate('approvedBy', 'name')
+        .populate('paymentVerifiedBy', 'name')
         .sort({ createdAt: -1 }),
       Venue.find().sort({ name: 1 }),
       Promise.all([
         Booking.countDocuments(),
+        Booking.countDocuments({ paymentStatus: 'pending_verification' }),
         Booking.countDocuments({ status: 'Pending' }),
         Booking.countDocuments({ status: 'Approved' }),
         Booking.countDocuments({ status: 'Completed' }),
         Booking.countDocuments({ status: 'Rejected' }),
-        Booking.countDocuments({ status: 'Cancelled' })
+        Booking.countDocuments({ status: 'Cancelled' }),
+        Booking.countDocuments({ paymentStatus: 'unpaid' })
       ])
     ]);
 
     const statusCounts = {
       all: counts[0],
-      pending: counts[1],
-      approved: counts[2],
-      completed: counts[3],
-      rejected: counts[4],
-      cancelled: counts[5]
+      pendingVerification: counts[1],
+      pending: counts[2],
+      approved: counts[3],
+      completed: counts[4],
+      rejected: counts[5],
+      cancelled: counts[6],
+      unpaid: counts[7]
     };
 
     res.render('admin/bookings/index', {
-      title: 'Booking Requests & Approvals - Admin',
+      title: 'Booking Requests & Payment Approvals - Admin',
       bookings,
       venues,
       currentFilter: {
         status: status || 'All',
+        paymentStatus: paymentStatus || 'All',
         venueId: venueId || 'All'
       },
       statusCounts
@@ -427,7 +478,7 @@ exports.getBookingsList = async (req, res) => {
   }
 };
 
-// Approve Booking Request
+// Approve Booking Request & Confirm Verified Payment
 exports.postApproveBooking = async (req, res) => {
   const { adminRemarks } = req.body;
 
@@ -439,12 +490,15 @@ exports.postApproveBooking = async (req, res) => {
     }
 
     booking.status = 'Approved';
-    booking.adminRemarks = adminRemarks ? adminRemarks.trim() : 'Booking request approved by venue administration.';
+    booking.paymentStatus = 'paid';
+    booking.adminRemarks = adminRemarks ? adminRemarks.trim() : 'Booking request and payment verified and approved by venue administration.';
     booking.approvedAt = new Date();
     booking.approvedBy = req.session.user.id;
+    booking.paymentVerifiedAt = new Date();
+    booking.paymentVerifiedBy = req.session.user.id;
 
     await booking.save();
-    req.flash('success_msg', `Booking ${booking.bookingReference} approved successfully!`);
+    req.flash('success_msg', `Booking ${booking.bookingReference} approved & slot locked successfully!`);
     res.redirect('/admin/bookings');
   } catch (error) {
     console.error('Error approving booking:', error);
@@ -453,7 +507,7 @@ exports.postApproveBooking = async (req, res) => {
   }
 };
 
-// Reject Booking Request
+// Reject Booking Request / Payment Proof
 exports.postRejectBooking = async (req, res) => {
   const { rejectionReason } = req.body;
 
@@ -464,15 +518,18 @@ exports.postRejectBooking = async (req, res) => {
       return res.redirect('/admin/bookings');
     }
 
-    booking.status = 'Rejected';
-    booking.rejectionReason = rejectionReason
+    const reason = rejectionReason
       ? rejectionReason.trim()
-      : 'Venue unavailable or scheduling conflict with institutional activities.';
+      : 'Payment verification failed or slot unavailable for institutional scheduling.';
+
+    booking.status = 'Rejected';
+    booking.paymentStatus = 'rejected';
+    booking.rejectionReason = reason;
     booking.rejectedAt = new Date();
     booking.rejectedBy = req.session.user.id;
 
     await booking.save();
-    req.flash('success_msg', `Booking ${booking.bookingReference} rejected.`);
+    req.flash('success_msg', `Booking ${booking.bookingReference} rejected and slot released.`);
     res.redirect('/admin/bookings');
   } catch (error) {
     console.error('Error rejecting booking:', error);
@@ -504,6 +561,103 @@ exports.postUpdateBookingStatus = async (req, res) => {
     console.error('Error updating booking status:', error);
     req.flash('error_msg', 'Failed to update booking status.');
     res.redirect('/admin/bookings');
+  }
+};
+
+// Render Admin Payment & Bank Gateway Settings Page
+exports.getPaymentSettings = async (req, res) => {
+  try {
+    let settings = await PaymentSetting.findOne({ isActive: true }).sort({ updatedAt: -1 });
+    if (!settings) {
+      settings = await PaymentSetting.findOne().sort({ updatedAt: -1 });
+    }
+    if (!settings) {
+      settings = {
+        accountHolderName: 'Campus Facilities Administration',
+        bankName: 'State Bank of India',
+        accountNumber: '40928172901',
+        ifscCode: 'SBIN0001234',
+        branchName: 'University Main Campus Branch',
+        upiId: 'campusfacilities@sbi',
+        customQrImage: '',
+        instructions: 'Please transfer the exact booking fee and submit your 12-digit UTR/UPI transaction reference.',
+        isActive: true
+      };
+    }
+
+    res.render('admin/payment-settings', {
+      title: 'Payment Gateway & Bank Account Settings - Admin',
+      settings
+    });
+  } catch (error) {
+    console.error('Error loading payment settings:', error);
+    req.flash('error_msg', 'Failed to load payment settings.');
+    res.redirect('/admin/dashboard');
+  }
+};
+
+// Save / Update Payment & Bank Settings
+exports.postSavePaymentSettings = async (req, res) => {
+  const {
+    accountHolderName,
+    bankName,
+    accountNumber,
+    ifscCode,
+    branchName,
+    upiId,
+    instructions,
+    isActive,
+    existingQr
+  } = req.body;
+
+  try {
+    if (!accountHolderName || !bankName || !accountNumber || !ifscCode || !upiId) {
+      req.flash('error_msg', 'Please fill in all required payment settings fields marked with *');
+      return res.redirect('/admin/payment-settings');
+    }
+
+    const cleanIfsc = ifscCode.trim().toUpperCase();
+    const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+    if (!ifscRegex.test(cleanIfsc)) {
+      req.flash('error_msg', 'Invalid IFSC Code format. Must be an 11-character Indian IFSC code (e.g. SBIN0001234).');
+      return res.redirect('/admin/payment-settings');
+    }
+
+    const cleanUpi = upiId.trim().toLowerCase();
+    if (!cleanUpi.includes('@')) {
+      req.flash('error_msg', 'Invalid UPI ID format. Must include an @ handle (e.g. campusfacilities@sbi).');
+      return res.redirect('/admin/payment-settings');
+    }
+
+    let customQrImage = existingQr || '';
+    if (req.file) {
+      customQrImage = bufferToDataUri(req.file);
+    }
+
+    let setting = await PaymentSetting.findOne({ isActive: true });
+    if (!setting) {
+      setting = new PaymentSetting();
+    }
+
+    setting.accountHolderName = accountHolderName.trim();
+    setting.bankName = bankName.trim();
+    setting.accountNumber = accountNumber.trim();
+    setting.ifscCode = cleanIfsc;
+    setting.branchName = branchName ? branchName.trim() : 'Main Campus Branch';
+    setting.upiId = cleanUpi;
+    setting.customQrImage = customQrImage;
+    setting.instructions = instructions ? instructions.trim() : 'Please transfer the exact booking fee and submit your 12-digit UTR/UPI transaction reference.';
+    setting.isActive = isActive === 'true' || isActive === 'on' || isActive === true;
+    setting.updatedBy = req.session.user.id;
+
+    await setting.save();
+
+    req.flash('success_msg', 'Payment & Bank Account settings saved and activated successfully!');
+    res.redirect('/admin/payment-settings');
+  } catch (error) {
+    console.error('Error saving payment settings:', error);
+    req.flash('error_msg', error.message || 'Failed to save payment settings.');
+    res.redirect('/admin/payment-settings');
   }
 };
 

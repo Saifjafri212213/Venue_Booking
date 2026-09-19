@@ -2,15 +2,31 @@
 <%- include('../partials/navbar') %>
 <%- include('../partials/alerts') %>
 
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-6">
   
   <!-- Action Bar -->
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 print:hidden">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden">
     <a href="/organiser/my-bookings" class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-brand-600">
       &larr; Back to My Bookings
     </a>
 
     <div class="flex items-center gap-2">
+      <% if (booking.paymentStatus === 'unpaid') { %>
+        <a 
+          href="/bookings/<%= booking._id %>/payment" 
+          class="py-2 px-4 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-500/20 flex items-center gap-1.5 transition-all hover:scale-105"
+        >
+          <i class="fa-solid fa-credit-card"></i> Complete Payment &rarr;
+        </a>
+      <% } else if (booking.paymentStatus === 'rejected') { %>
+        <a 
+          href="/bookings/<%= booking._id %>/retry-payment" 
+          class="py-2 px-4 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-md shadow-rose-500/20 flex items-center gap-1.5 transition-all hover:scale-105"
+        >
+          <i class="fa-solid fa-rotate-right"></i> Retry Payment &rarr;
+        </a>
+      <% } %>
+
       <button 
         type="button" 
         onclick="window.print()" 
@@ -30,6 +46,23 @@
       <% } %>
     </div>
   </div>
+
+  <!-- Rejection Banner if Rejected -->
+  <% if (booking.status === 'Rejected' || booking.paymentStatus === 'rejected') { %>
+    <div class="p-5 rounded-3xl bg-rose-50 border border-rose-200 text-rose-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div class="space-y-1">
+        <span class="font-extrabold text-sm flex items-center gap-1.5 text-rose-700">
+          <i class="fa-solid fa-triangle-exclamation"></i> Booking / Payment Rejected
+        </span>
+        <p class="text-xs text-rose-800">
+          <%= booking.rejectionReason || 'The payment verification or booking request could not be approved by venue administration.' %>
+        </p>
+      </div>
+      <a href="/bookings/<%= booking._id %>/retry-payment" class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-sm shrink-0">
+        Retry Payment & Submit Proof &rarr;
+      </a>
+    </div>
+  <% } %>
 
   <!-- Booking Pass Official Ticket / Card -->
   <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xl overflow-hidden print:shadow-none print:border">
@@ -61,12 +94,12 @@
           <% if (booking.status === 'Approved') { %>
             <div class="px-4 py-2 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-extrabold uppercase tracking-wider flex items-center gap-2">
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              Booking Approved
+              Booking Approved & Slot Locked
             </div>
           <% } else if (booking.status === 'Pending') { %>
             <div class="px-4 py-2 rounded-2xl bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-extrabold uppercase tracking-wider flex items-center gap-2">
               <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-              Awaiting Approval
+              <%= booking.paymentStatus === 'pending_verification' ? 'Payment Verification Pending' : 'Awaiting Payment' %>
             </div>
           <% } else if (booking.status === 'Completed') { %>
             <div class="px-4 py-2 rounded-2xl bg-blue-500/20 border border-blue-400/40 text-blue-300 text-xs font-extrabold uppercase tracking-wider">
@@ -110,11 +143,83 @@
           </span>
         </div>
         <div>
-          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Total Cost</span>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Total Amount</span>
           <span class="text-sm font-extrabold text-emerald-600 mt-1 block">
             $<%= booking.totalCost %>
           </span>
         </div>
+      </div>
+
+      <!-- Payment & Transaction Receipt Section -->
+      <div class="p-6 rounded-3xl bg-slate-900 text-white space-y-4 shadow-lg">
+        <div class="flex items-center justify-between border-b border-white/10 pb-3">
+          <h3 class="font-heading font-extrabold text-sm uppercase tracking-wider text-indigo-300 flex items-center gap-2">
+            <i class="fa-solid fa-receipt text-indigo-400"></i> Payment & Financial Transaction Record
+          </h3>
+          
+          <div>
+            <% if (booking.paymentStatus === 'paid') { %>
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1">
+                <i class="fa-solid fa-circle-check text-xs"></i> Paid & Verified
+              </span>
+            <% } else if (booking.paymentStatus === 'pending_verification') { %>
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center gap-1 animate-pulse">
+                <i class="fa-solid fa-clock text-xs"></i> Pending Verification
+              </span>
+            <% } else if (booking.paymentStatus === 'rejected') { %>
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-rose-500/20 text-rose-300 border border-rose-400/30">
+                Payment Rejected
+              </span>
+            <% } else { %>
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-700 text-slate-300">
+                Unpaid Slot Hold
+              </span>
+            <% } %>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+          <div>
+            <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">Payment Reference / UTR</span>
+            <span class="font-mono font-bold text-white text-sm mt-0.5 block">
+              <%= booking.utrNumber || 'Not Submitted' %>
+            </span>
+          </div>
+
+          <div>
+            <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">Amount Payable</span>
+            <span class="font-bold text-emerald-400 text-sm mt-0.5 block">
+              $<%= booking.paymentAmount || booking.totalCost %>
+            </span>
+          </div>
+
+          <div>
+            <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">Submitted At</span>
+            <span class="text-slate-300 mt-0.5 block">
+              <%= booking.paymentSubmittedAt ? new Date(booking.paymentSubmittedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A' %>
+            </span>
+          </div>
+
+          <div>
+            <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">Verified By</span>
+            <span class="text-slate-300 mt-0.5 block">
+              <%= booking.paymentVerifiedBy ? booking.paymentVerifiedBy.name : (booking.paymentStatus === 'paid' ? 'Campus Admin' : 'Pending Verification') %>
+            </span>
+          </div>
+        </div>
+
+        <% if (booking.paymentScreenshot) { %>
+          <div class="pt-3 border-t border-white/10 flex items-center justify-between">
+            <span class="text-xs text-slate-300">Payment Screenshot Proof attached:</span>
+            <button 
+              type="button" 
+              onclick="document.getElementById('screenshotProofModal').classList.remove('hidden')"
+              class="px-3 py-1.5 rounded-lg text-xs font-bold text-indigo-300 bg-white/10 hover:bg-white/20 transition-colors flex items-center gap-1.5"
+            >
+              <i class="fa-solid fa-image"></i> View Screenshot
+            </button>
+          </div>
+        <% } %>
       </div>
 
       <!-- Venue & Organiser Split Details -->
@@ -205,13 +310,6 @@
         </div>
       <% } %>
 
-      <% if (booking.rejectionReason) { %>
-        <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-900 space-y-1">
-          <span class="font-bold uppercase tracking-wider text-[10px] text-rose-700 block">Rejection Reason</span>
-          <p><%= booking.rejectionReason %></p>
-        </div>
-      <% } %>
-
       <!-- Security QR Verification & Terms -->
       <div class="pt-6 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-6">
         <div class="space-y-1 text-xs text-slate-500">
@@ -237,6 +335,30 @@
 
   </div>
 </div>
+
+<!-- Screenshot Proof Modal -->
+<% if (booking.paymentScreenshot) { %>
+  <div id="screenshotProofModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl animate-fade-in border border-slate-200">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-heading font-extrabold text-base text-slate-900">
+          Payment Proof Screenshot
+        </h3>
+        <button onclick="document.getElementById('screenshotProofModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <div class="max-h-[65vh] overflow-auto rounded-xl bg-slate-100 p-2 flex items-center justify-center">
+        <img src="<%= booking.paymentScreenshot %>" alt="Payment Proof" class="max-w-full max-h-[55vh] object-contain rounded-lg">
+      </div>
+      <div class="flex justify-end">
+        <button type="button" onclick="document.getElementById('screenshotProofModal').classList.add('hidden')" class="py-2 px-4 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+<% } %>
 
 <!-- Cancel Booking Modal -->
 <div id="cancelModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">

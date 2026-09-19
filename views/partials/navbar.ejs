@@ -35,6 +35,9 @@
             <a href="/admin/bookings" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 transition-colors <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/admin/bookings') ? 'text-brand-600 bg-brand-50 font-bold' : '' %>">
               <i class="fa-solid fa-clipboard-check mr-1.5 text-xs text-indigo-500"></i> Approvals
             </a>
+            <a href="/admin/payment-settings" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 transition-colors <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/admin/payment-settings') ? 'text-brand-600 bg-brand-50 font-bold' : '' %>">
+              <i class="fa-solid fa-credit-card mr-1.5 text-xs text-indigo-500"></i> Payment Settings
+            </a>
             <a href="/admin/maintenance" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 transition-colors <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/admin/maintenance') ? 'text-brand-600 bg-brand-50 font-bold' : '' %>">
               <i class="fa-solid fa-screwdriver-wrench mr-1.5 text-xs text-indigo-500"></i> Maintenance
             </a>
@@ -133,6 +136,9 @@
           </a>
           <a href="/admin/bookings" class="block px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600">
             <i class="fa-solid fa-clipboard-check mr-2 text-indigo-500"></i> Booking Approvals
+          </a>
+          <a href="/admin/payment-settings" class="block px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600">
+            <i class="fa-solid fa-credit-card mr-2 text-indigo-500"></i> Payment Settings
           </a>
           <a href="/admin/maintenance" class="block px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600">
             <i class="fa-solid fa-screwdriver-wrench mr-2 text-indigo-500"></i> Maintenance Blackouts
