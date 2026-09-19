@@ -3,6 +3,48 @@
  * Handles registration, login, demo accounts, and logout.
  */
 const User = require('../models/User');
+const Booking = require('../models/Booking');
+
+// Helper: If user has a pending draft booking in session, instantiate it and redirect to payment
+const handlePendingBooking = async (req, user) => {
+  if (req.session && req.session.pendingBooking) {
+    try {
+      const draft = req.session.pendingBooking;
+      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+      const bookingReference = `EVT-${new Date().getFullYear()}-${randomSuffix}`;
+      const paymentExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+      const newBooking = new Booking({
+        bookingReference,
+        venue: draft.venueId,
+        organiser: user._id || user.id,
+        eventTitle: draft.eventTitle,
+        eventType: draft.eventType,
+        description: draft.description || '',
+        expectedAttendees: Number(draft.expectedAttendees) || 1,
+        bookingDate: new Date(draft.bookingDate),
+        startTime: draft.startTime,
+        endTime: draft.endTime,
+        durationHours: draft.durationHours,
+        hourlyRate: draft.hourlyRate,
+        totalCost: draft.totalCost,
+        paymentAmount: draft.totalCost,
+        paymentStatus: 'unpaid',
+        paymentExpiresAt,
+        specialFacilities: draft.specialFacilities || [],
+        specialRequests: draft.specialRequests || '',
+        status: 'Pending'
+      });
+
+      await newBooking.save();
+      delete req.session.pendingBooking;
+      return newBooking;
+    } catch (err) {
+      console.error('Error instantiating pending booking:', err);
+    }
+  }
+  return null;
+};
 
 // Render Login Page
 exports.getLogin = (req, res) => {
@@ -58,6 +100,13 @@ exports.postLogin = async (req, res) => {
       avatar: user.avatar,
       phone: user.phone
     };
+
+    // Check for pending booking from guest checkout
+    const createdBooking = await handlePendingBooking(req, user);
+    if (createdBooking) {
+      req.flash('success_msg', `Welcome, ${user.name}! Your slot for "${createdBooking.eventTitle}" is held for 15 minutes. Please complete payment.`);
+      return res.redirect(`/bookings/${createdBooking._id}/payment`);
+    }
 
     req.flash('success_msg', `Welcome back, ${user.name}!`);
 
@@ -148,6 +197,13 @@ exports.postRegister = async (req, res) => {
       avatar: newUser.avatar,
       phone: newUser.phone
     };
+
+    // Check for pending booking from guest checkout
+    const createdBooking = await handlePendingBooking(req, newUser);
+    if (createdBooking) {
+      req.flash('success_msg', `Account created! Your slot for "${createdBooking.eventTitle}" is held for 15 minutes. Please complete payment.`);
+      return res.redirect(`/bookings/${createdBooking._id}/payment`);
+    }
 
     req.flash('success_msg', 'Registration successful! Welcome to the platform.');
     if (newUser.role === 'admin') {

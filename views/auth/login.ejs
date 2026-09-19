@@ -11,12 +11,34 @@
         <i class="fa-solid fa-lock text-2xl"></i>
       </div>
       <h2 class="font-heading font-extrabold text-3xl text-slate-900 tracking-tight">
-        Welcome Back
+        <%= (typeof pendingBooking !== 'undefined' && pendingBooking) ? 'Sign In to Finalize Booking' : 'Welcome Back' %>
       </h2>
       <p class="text-xs text-slate-500 max-w-xs mx-auto">
-        Sign in to manage venue bookings, track event approvals, or access the admin control center.
+        <%= (typeof pendingBooking !== 'undefined' && pendingBooking) ? 'Sign in to confirm your venue reservation and proceed to payment.' : 'Sign in to manage venue bookings, track event approvals, or access your workspace.' %>
       </p>
     </div>
+
+    <!-- Pending Booking Reservation Alert Banner -->
+    <% if (typeof pendingBooking !== 'undefined' && pendingBooking) { %>
+      <div class="p-4 rounded-3xl bg-indigo-50 border-2 border-indigo-200 shadow-sm space-y-2 text-xs text-indigo-950 animate-fade-in">
+        <div class="flex items-center justify-between">
+          <span class="font-extrabold uppercase tracking-wider text-[10px] text-indigo-700 flex items-center gap-1.5">
+            <i class="fa-solid fa-calendar-check text-indigo-600"></i> Finalize Your Venue Booking
+          </span>
+          <span class="font-extrabold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">$<%= pendingBooking.totalCost %></span>
+        </div>
+        <div class="space-y-0.5">
+          <p class="font-bold text-slate-900 text-sm"><%= pendingBooking.eventTitle %></p>
+          <p class="text-slate-600 font-medium">
+            <i class="fa-solid fa-landmark text-[11px] mr-1 text-indigo-500"></i><%= pendingBooking.venueName %> &bull; 
+            <i class="fa-regular fa-calendar text-[11px] mr-1 text-indigo-500"></i><%= pendingBooking.bookingDate %> (<%= pendingBooking.startTime %> - <%= pendingBooking.endTime %>)
+          </p>
+        </div>
+        <p class="text-[11px] text-indigo-700 border-t border-indigo-100 pt-1.5">
+          Sign in below or <a href="/auth/register" class="font-bold underline text-brand-700 hover:text-brand-900">create an account</a> to hold this slot for 15 minutes and proceed to payment.
+        </p>
+      </div>
+    <% } %>
 
     <!-- Standard Login Form -->
     <div class="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-6">

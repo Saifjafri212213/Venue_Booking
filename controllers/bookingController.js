@@ -378,6 +378,31 @@ exports.postCreateBooking = async (req, res) => {
     // Calculate Total Cost
     const totalCost = Math.round(durationHours * venue.hourlyRate * 100) / 100;
 
+    // Check if user is logged in
+    if (!req.session.user) {
+      // Save draft booking in session for guest
+      req.session.pendingBooking = {
+        venueId: venue._id.toString(),
+        venueName: venue.name,
+        venueCode: venue.code,
+        bookingDate,
+        startTime,
+        endTime,
+        durationHours,
+        hourlyRate: venue.hourlyRate,
+        totalCost,
+        eventTitle: eventTitle.trim(),
+        eventType,
+        description: description ? description.trim() : '',
+        expectedAttendees: Number(expectedAttendees),
+        specialFacilities: facilitiesList,
+        specialRequests: specialRequests ? specialRequests.trim() : ''
+      };
+
+      req.flash('info_msg', `Great! We've saved your booking for ${venue.name} ($${totalCost}). Please sign in or create an account to proceed to payment.`);
+      return res.redirect('/auth/login');
+    }
+
     // Generate Unique Booking Reference
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const bookingReference = `EVT-${new Date().getFullYear()}-${randomSuffix}`;

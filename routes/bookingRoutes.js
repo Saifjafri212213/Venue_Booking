@@ -7,9 +7,9 @@ const bookingController = require('../controllers/bookingController');
 const { ensureAuthenticated } = require('../middleware/auth');
 const { upload } = require('../middleware/upload');
 
-// Request a new booking
-router.get('/new', ensureAuthenticated, bookingController.getNewBookingForm);
-router.post('/', ensureAuthenticated, bookingController.postCreateBooking);
+// Request a new booking (accessible to guests and logged-in organisers)
+router.get('/new', bookingController.getNewBookingForm);
+router.post('/', bookingController.postCreateBooking);
 
 // Payment first flow
 router.get('/:id/payment', ensureAuthenticated, bookingController.getPaymentPage);
