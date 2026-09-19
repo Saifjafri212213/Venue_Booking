@@ -1,0 +1,186 @@
+<nav class="sticky top-0 z-50 glass-nav border-b border-slate-200/80 transition-all duration-300 shadow-sm">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16 sm:h-20">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-3">
+        <a href="/" class="flex items-center gap-2.5 group">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-accent-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform duration-200">
+            <i class="fa-solid fa-landmark text-lg"></i>
+          </div>
+          <div class="flex flex-col">
+            <span class="font-heading font-extrabold text-xl text-slate-900 tracking-tight flex items-center gap-1">
+              Campus<span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-accent-600">Venue</span>
+            </span>
+            <span class="text-[10px] uppercase font-bold tracking-widest text-slate-600 -mt-1">Event Management</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Desktop Navigation Links -->
+      <div class="hidden md:flex items-center gap-1 lg:gap-2">
+        <a href="/venues" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 transition-colors <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/venues') ? 'text-brand-600 bg-brand-50 font-bold' : '' %>">
+          <i class="fa-solid fa-compass mr-1.5 text-xs text-brand-500"></i> Explore Venues
+        </a>
+
+        <% if (user) { %>
+          <% if (user.role === 'admin') { %>
+            <!-- Admin Navigation Links -->
+            <a href="/admin/dashboard" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 transition-colors <%= typeof currentPath !== 'undefined' && currentPath === '/admin/dashboard' ? 'text-brand-600 bg-brand-50 font-bold' : '' %>">
+              <i class="fa-solid fa-gauge-high mr-1.5 text-xs text-indigo-500"></i> Dashboard
+            </a>
+            <a href="/admin/venues" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 transition-colors <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/admin/venues') ? 'text-brand-600 bg-brand-50 font-bold' : '' %>">
+              <i class="fa-solid fa-building-columns mr-1.5 text-xs text-indigo-500"></i> Venues
+            </a>
+            <a href="/admin/bookings" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 transition-colors <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/admin/bookings') ? 'text-brand-600 bg-brand-50 font-bold' : '' %>">
+              <i class="fa-solid fa-clipboard-check mr-1.5 text-xs text-indigo-500"></i> Approvals
+            </a>
+            <a href="/admin/maintenance" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 transition-colors <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/admin/maintenance') ? 'text-brand-600 bg-brand-50 font-bold' : '' %>">
+              <i class="fa-solid fa-screwdriver-wrench mr-1.5 text-xs text-indigo-500"></i> Maintenance
+            </a>
+            <a href="/admin/analytics" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 transition-colors <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/admin/analytics') ? 'text-brand-600 bg-brand-50 font-bold' : '' %>">
+              <i class="fa-solid fa-chart-pie mr-1.5 text-xs text-indigo-500"></i> Analytics
+            </a>
+          <% } else { %>
+            <!-- Organiser Navigation Links -->
+            <a href="/organiser/dashboard" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 transition-colors <%= typeof currentPath !== 'undefined' && currentPath === '/organiser/dashboard' ? 'text-brand-600 bg-brand-50 font-bold' : '' %>">
+              <i class="fa-solid fa-table-columns mr-1.5 text-xs text-brand-500"></i> Workspace
+            </a>
+            <a href="/organiser/my-bookings" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 transition-colors <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/organiser/my-bookings') ? 'text-brand-600 bg-brand-50 font-bold' : '' %>">
+              <i class="fa-solid fa-calendar-check mr-1.5 text-xs text-brand-500"></i> My Bookings
+            </a>
+          <% } %>
+        <% } %>
+      </div>
+
+      <!-- Right Action / User Profile -->
+      <div class="hidden md:flex items-center gap-3">
+        <% if (user) { %>
+          <!-- Action Button -->
+          <% if (user.role === 'admin') { %>
+            <a href="/admin/venues/new" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-gradient-to-r from-brand-600 to-accent-600 hover:from-brand-700 hover:to-accent-700 shadow-md shadow-brand-500/20 transition-all hover:-translate-y-0.5">
+              <i class="fa-solid fa-plus text-xs"></i> Add Venue
+            </a>
+          <% } else { %>
+            <a href="/bookings/new" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-gradient-to-r from-brand-600 to-accent-600 hover:from-brand-700 hover:to-accent-700 shadow-md shadow-brand-500/20 transition-all hover:-translate-y-0.5">
+              <i class="fa-solid fa-plus text-xs"></i> Request Booking
+            </a>
+          <% } %>
+
+          <!-- User Badge & Logout -->
+          <div class="relative flex items-center gap-2 pl-3 border-l border-slate-200">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-full bg-slate-100 ring-2 ring-brand-500/20 overflow-hidden flex items-center justify-center text-slate-700 font-bold text-sm">
+                <% if (user.avatar) { %>
+                  <img src="<%= user.avatar %>" alt="<%= user.name %>" class="w-full h-full object-cover">
+                <% } else { %>
+                  <%= user.name.charAt(0).toUpperCase() %>
+                <% } %>
+              </div>
+              <div class="flex flex-col text-left">
+                <span class="text-xs font-bold text-slate-900 leading-tight"><%= user.name %></span>
+                <span class="text-[10px] font-semibold text-slate-600 flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full <%= user.role === 'admin' ? 'bg-purple-500' : 'bg-emerald-500' %>"></span>
+                  <%= user.role === 'admin' ? 'Venue Manager' : 'Organiser' %>
+                </span>
+              </div>
+            </div>
+
+            <a href="/auth/logout" title="Sign Out" class="w-8 h-8 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-colors ml-1">
+              <i class="fa-solid fa-arrow-right-from-bracket text-sm"></i>
+            </a>
+          </div>
+        <% } else { %>
+          <!-- Guest Auth Actions -->
+          <div class="flex items-center gap-2">
+            <a href="/auth/login" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:text-brand-600 hover:bg-slate-100 transition-colors">
+              Sign In
+            </a>
+            <a href="/auth/register" class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 shadow-md shadow-brand-500/20 transition-all hover:-translate-y-0.5">
+              Register
+            </a>
+          </div>
+        <% } %>
+      </div>
+
+      <!-- Mobile Menu Button -->
+      <div class="md:hidden flex items-center gap-2">
+        <% if (!user) { %>
+          <a href="/auth/login" class="text-xs font-bold text-brand-600 px-2.5 py-1.5 rounded-lg bg-brand-50">Sign In</a>
+        <% } %>
+        <button id="mobileMenuBtn" type="button" class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 hover:text-brand-600 flex items-center justify-center focus:outline-none">
+          <i class="fa-solid fa-bars text-lg"></i>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Mobile Drawer Menu -->
+  <div id="mobileMenu" class="hidden md:hidden border-t border-slate-200 bg-white px-4 pt-3 pb-6 space-y-3 animate-fade-in shadow-xl">
+    <div class="space-y-1">
+      <a href="/venues" class="block px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600">
+        <i class="fa-solid fa-compass mr-2 text-brand-500"></i> Explore Venues
+      </a>
+
+      <% if (user) { %>
+        <% if (user.role === 'admin') { %>
+          <a href="/admin/dashboard" class="block px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600">
+            <i class="fa-solid fa-gauge-high mr-2 text-indigo-500"></i> Admin Dashboard
+          </a>
+          <a href="/admin/venues" class="block px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600">
+            <i class="fa-solid fa-building-columns mr-2 text-indigo-500"></i> Manage Venues
+          </a>
+          <a href="/admin/bookings" class="block px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600">
+            <i class="fa-solid fa-clipboard-check mr-2 text-indigo-500"></i> Booking Approvals
+          </a>
+          <a href="/admin/maintenance" class="block px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600">
+            <i class="fa-solid fa-screwdriver-wrench mr-2 text-indigo-500"></i> Maintenance Blackouts
+          </a>
+          <a href="/admin/analytics" class="block px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600">
+            <i class="fa-solid fa-chart-pie mr-2 text-indigo-500"></i> Analytics & Utilization
+          </a>
+        <% } else { %>
+          <a href="/organiser/dashboard" class="block px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600">
+            <i class="fa-solid fa-table-columns mr-2 text-brand-500"></i> Organiser Workspace
+          </a>
+          <a href="/bookings/new" class="block px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600">
+            <i class="fa-solid fa-plus-circle mr-2 text-brand-500"></i> Request a Booking
+          </a>
+          <a href="/organiser/my-bookings" class="block px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600">
+            <i class="fa-solid fa-calendar-check mr-2 text-brand-500"></i> My Bookings History
+          </a>
+        <% } %>
+        
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-brand-100 text-brand-700 font-bold flex items-center justify-center text-xs">
+              <%= user.name.charAt(0) %>
+            </div>
+            <div>
+              <p class="text-xs font-bold text-slate-900"><%= user.name %></p>
+              <p class="text-[10px] text-slate-500 capitalize"><%= user.role %></p>
+            </div>
+          </div>
+          <a href="/auth/logout" class="text-xs font-bold text-rose-600 bg-rose-50 px-3 py-1.5 rounded-lg">Sign Out</a>
+        </div>
+      <% } else { %>
+        <div class="pt-2 border-t border-slate-100 grid grid-cols-2 gap-2">
+          <a href="/auth/login" class="text-center py-2 rounded-lg text-sm font-semibold text-slate-700 bg-slate-100">Sign In</a>
+          <a href="/auth/register" class="text-center py-2 rounded-lg text-sm font-semibold text-white bg-brand-600">Register</a>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</nav>
+
+<script>
+  // Mobile menu toggle
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const mobileMenu = document.getElementById('mobileMenu');
+  if (mobileMenuBtn && mobileMenu) {
+    mobileMenuBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+  }
+</script>

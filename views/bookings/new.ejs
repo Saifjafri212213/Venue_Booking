@@ -1,0 +1,419 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+<%- include('../partials/alerts') %>
+
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+  
+  <!-- Header -->
+  <div class="mb-8 space-y-2">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-xs font-bold">
+      <i class="fa-solid fa-calendar-plus"></i> Organiser Workspace
+    </div>
+    <h1 class="font-heading font-extrabold text-3xl sm:text-4xl text-slate-900 tracking-tight">
+      Request a Venue Booking
+    </h1>
+    <p class="text-xs sm:text-sm text-slate-500 max-w-2xl">
+      Select your venue, date, and time slot. Our conflict engine ensures non-overlapping schedules with instant auto-suggestions if conflicts occur.
+    </p>
+  </div>
+
+  <!-- CONFLICT & AUTO-SUGGESTIONS HERO CARD (Displayed when a conflict occurs) -->
+  <% if (conflictInfo) { %>
+    <div class="mb-8 p-6 sm:p-8 rounded-3xl bg-rose-50 border-2 border-rose-200 shadow-md space-y-6 animate-fade-in">
+      
+      <!-- Conflict Header -->
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-xl shrink-0">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div class="space-y-1">
+          <h3 class="font-heading font-extrabold text-lg text-rose-950">
+            Scheduling Conflict Detected
+          </h3>
+          <p class="text-xs font-medium text-rose-800 leading-relaxed">
+            <%= conflictInfo.message %>
+          </p>
+        </div>
+      </div>
+
+      <!-- STRETCH GOAL: SMART AUTO-SUGGESTIONS ENGINE SECTION -->
+      <% if (suggestions) { %>
+        <div class="pt-6 border-t border-rose-200/80 space-y-6">
+          
+          <div class="flex items-center gap-2 text-indigo-900 font-bold text-sm">
+            <div class="w-7 h-7 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+            </div>
+            <span>Smart Recommendations Engine (Alternative Options)</span>
+          </div>
+
+          <!-- 1. Alternative Venues Available for this Slot -->
+          <% if (suggestions.alternativeVenues && suggestions.alternativeVenues.length > 0) { %>
+            <div>
+              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3">
+                Option 1: Alternative Venues Free on <%= formData.bookingDate %> (<%= formData.startTime %> - <%= formData.endTime %>)
+              </h4>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <% suggestions.alternativeVenues.forEach(alt => { %>
+                  <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:border-brand-500 transition-colors flex flex-col justify-between space-y-3">
+                    <div>
+                      <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-extrabold text-brand-600 uppercase"><%= alt.venue.code %></span>
+                        <span class="text-xs font-bold text-slate-900">$<%= alt.venue.hourlyRate %>/hr</span>
+                      </div>
+                      <h5 class="font-heading font-bold text-sm text-slate-900 mt-1"><%= alt.venue.name %></h5>
+                      <p class="text-[11px] text-slate-500"><%= alt.venue.capacity %> Seats • <%= alt.venue.category %></p>
+                    </div>
+
+                    <button 
+                      type="button" 
+                      onclick="selectAlternativeVenue('<%= alt.venue._id %>')"
+                      class="w-full py-2 px-3 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      <i class="fa-solid fa-check text-xs"></i> Select this Venue
+                    </button>
+                  </div>
+                <% }) %>
+              </div>
+            </div>
+          <% } %>
+
+          <!-- 2. Alternative Time Slots for Same Venue -->
+          <% if (suggestions.alternativeSlots && suggestions.alternativeSlots.length > 0) { %>
+            <div>
+              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3">
+                Option 2: Alternative Free Time Slots on <%= formData.bookingDate %> (Same Venue)
+              </h4>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <% suggestions.alternativeSlots.forEach(slot => { %>
+                  <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                      <span class="text-xs font-bold text-slate-900 block"><%= slot.label %></span>
+                      <span class="text-[11px] text-slate-500"><%= slot.startTime %> to <%= slot.endTime %></span>
+                    </div>
+                    <button 
+                      type="button" 
+                      onclick="selectAlternativeSlot('<%= slot.startTime %>', '<%= slot.endTime %>')"
+                      class="py-1.5 px-3 rounded-xl text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-colors"
+                    >
+                      Use Slot
+                    </button>
+                  </div>
+                <% }) %>
+              </div>
+            </div>
+          <% } %>
+
+        </div>
+      <% } %>
+
+    </div>
+  <% } %>
+
+  <!-- Booking Form Container -->
+  <div class="bg-white p-6 sm:p-10 rounded-3xl border border-slate-200/80 shadow-sm">
+    <form action="/bookings" method="POST" class="space-y-8" id="bookingForm">
+      
+      <!-- Section 1: Venue Selection & Live Pricing -->
+      <div class="space-y-4">
+        <h3 class="font-heading font-bold text-base text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3">
+          <span class="w-6 h-6 rounded-lg bg-brand-100 text-brand-700 text-xs flex items-center justify-center font-bold">1</span>
+          Select Campus Venue
+        </h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="sm:col-span-2">
+            <label for="venueId" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Campus Venue *
+            </label>
+            <select 
+              name="venueId" 
+              id="venueId" 
+              required
+              onchange="handleVenueChange(this)"
+              class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-semibold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 bg-white"
+            >
+              <option value="">-- Choose an Available Venue --</option>
+              <% venues.forEach(v => { %>
+                <option 
+                  value="<%= v._id %>" 
+                  data-rate="<%= v.hourlyRate %>" 
+                  data-capacity="<%= v.capacity %>"
+                  data-name="<%= v.name %>"
+                  <%= (formData.venueId && formData.venueId.toString() === v._id.toString()) || (selectedVenue && selectedVenue._id.toString() === v._id.toString()) ? 'selected' : '' %>
+                >
+                  <%= v.name %> (<%= v.code %>) — <%= v.capacity %> Seats — $<%= v.hourlyRate %>/hr
+                </option>
+              <% }) %>
+            </select>
+          </div>
+
+          <!-- Live Cost Estimator Card -->
+          <div class="bg-brand-50/70 p-4 rounded-2xl border border-brand-100 flex flex-col justify-between">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-brand-800">Estimated Total Cost</span>
+            <div class="flex items-baseline gap-1 mt-1">
+              <span id="displayTotalCost" class="text-2xl font-extrabold text-brand-700 font-heading">$0</span>
+              <span id="displayDuration" class="text-[11px] text-slate-500 font-semibold">(0 hrs)</span>
+            </div>
+            <span class="text-[10px] text-slate-400 mt-1">Duration × Hourly Rate</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Date & Time Slots -->
+      <div class="space-y-4">
+        <h3 class="font-heading font-bold text-base text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3">
+          <span class="w-6 h-6 rounded-lg bg-brand-100 text-brand-700 text-xs flex items-center justify-center font-bold">2</span>
+          Event Schedule & Time Slot
+        </h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label for="bookingDate" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Booking Date *
+            </label>
+            <input 
+              type="date" 
+              name="bookingDate" 
+              id="bookingDate" 
+              required
+              value="<%= formData.bookingDate %>"
+              onchange="calculateTotal()"
+              class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-semibold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
+            >
+          </div>
+
+          <div>
+            <label for="startTime" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Start Time *
+            </label>
+            <input 
+              type="time" 
+              name="startTime" 
+              id="startTime" 
+              required
+              value="<%= formData.startTime %>"
+              onchange="calculateTotal()"
+              class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-semibold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
+            >
+          </div>
+
+          <div>
+            <label for="endTime" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              End Time *
+            </label>
+            <input 
+              type="time" 
+              name="endTime" 
+              id="endTime" 
+              required
+              value="<%= formData.endTime %>"
+              onchange="calculateTotal()"
+              class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-semibold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Event Information -->
+      <div class="space-y-4">
+        <h3 class="font-heading font-bold text-base text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3">
+          <span class="w-6 h-6 rounded-lg bg-brand-100 text-brand-700 text-xs flex items-center justify-center font-bold">3</span>
+          Event Details
+        </h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="sm:col-span-2">
+            <label for="eventTitle" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Event Title / Name *
+            </label>
+            <input 
+              type="text" 
+              name="eventTitle" 
+              id="eventTitle" 
+              required
+              value="<%= formData.eventTitle %>"
+              placeholder="e.g. Annual Tech Symposium & Hackathon 2026"
+              class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
+            >
+          </div>
+
+          <div>
+            <label for="eventType" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Event Category
+            </label>
+            <select 
+              name="eventType" 
+              id="eventType"
+              class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 bg-white"
+            >
+              <option value="Academic" <%= formData.eventType === 'Academic' ? 'selected' : '' %>>Academic Lecture</option>
+              <option value="Seminar" <%= formData.eventType === 'Seminar' ? 'selected' : '' %>>Seminar / Conference</option>
+              <option value="Tech Fest" <%= formData.eventType === 'Tech Fest' ? 'selected' : '' %>>Tech Fest / Hackathon</option>
+              <option value="Workshop" <%= formData.eventType === 'Workshop' ? 'selected' : '' %>>Workshop / Training</option>
+              <option value="Cultural" <%= formData.eventType === 'Cultural' ? 'selected' : '' %>>Cultural / Music Fest</option>
+              <option value="Society Meeting" <%= formData.eventType === 'Society Meeting' ? 'selected' : '' %>>Club / Society Meeting</option>
+              <option value="Corporate" <%= formData.eventType === 'Corporate' ? 'selected' : '' %>>Corporate / Recruitment</option>
+              <option value="Celebration" <%= formData.eventType === 'Celebration' ? 'selected' : '' %>>Celebration / Gathering</option>
+              <option value="Other" <%= formData.eventType === 'Other' ? 'selected' : '' %>>Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label for="expectedAttendees" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Expected Attendees *
+            </label>
+            <input 
+              type="number" 
+              name="expectedAttendees" 
+              id="expectedAttendees" 
+              required
+              min="1"
+              value="<%= formData.expectedAttendees || 50 %>"
+              class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
+            >
+          </div>
+
+          <div class="sm:col-span-2">
+            <label for="description" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Event Summary & Purpose
+            </label>
+            <input 
+              type="text" 
+              name="description" 
+              id="description" 
+              value="<%= formData.description %>"
+              placeholder="Brief description of event agenda and campus beneficiaries"
+              class="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4: Special Facilities Checklist -->
+      <div class="space-y-4">
+        <h3 class="font-heading font-bold text-base text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3">
+          <span class="w-6 h-6 rounded-lg bg-brand-100 text-brand-700 text-xs flex items-center justify-center font-bold">4</span>
+          Required Facilities & AV Setup
+        </h3>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <% const standardFacilities = [
+            'Projector & Screen',
+            'Surround Sound Audio',
+            'Stage Lighting',
+            'Central AC',
+            'High-Speed Wi-Fi',
+            'Video Conferencing',
+            'Podiums & Microphones',
+            'Catering Pantry'
+          ]; %>
+
+          <% standardFacilities.forEach(facility => { %>
+            <label class="flex items-center gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200/80 cursor-pointer hover:bg-slate-100 transition-colors text-xs font-semibold text-slate-700">
+              <input 
+                type="checkbox" 
+                name="specialFacilities" 
+                value="<%= facility %>"
+                <%= (formData.specialFacilities || []).includes(facility) ? 'checked' : '' %>
+                class="rounded text-brand-600 focus:ring-brand-500 h-4 w-4 border-slate-300"
+              >
+              <span><%= facility %></span>
+            </label>
+          <% }) %>
+        </div>
+
+        <div>
+          <label for="specialRequests" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+            Additional AV / Logistics Notes (Optional)
+          </label>
+          <textarea 
+            name="specialRequests" 
+            id="specialRequests" 
+            rows="2"
+            placeholder="Special seating arrangement, extra wireless mics, podium placement..."
+            class="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
+          ><%= formData.specialRequests %></textarea>
+        </div>
+      </div>
+
+      <!-- Submit Action Button -->
+      <div class="pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p class="text-xs text-slate-500">
+          <i class="fa-solid fa-lock text-slate-400 mr-1"></i>
+          Your request will be submitted to the Venue Manager for fast approval.
+        </p>
+
+        <button 
+          type="submit" 
+          class="w-full sm:w-auto py-3.5 px-8 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-gradient-to-r from-brand-600 to-accent-600 hover:from-brand-700 hover:to-accent-700 shadow-md shadow-brand-500/25 transition-all hover:scale-[1.02] flex items-center justify-center gap-2"
+        >
+          <i class="fa-solid fa-paper-plane text-xs"></i>
+          Submit Booking Request
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+</div>
+
+<script>
+  function calculateTotal() {
+    const venueSelect = document.getElementById('venueId');
+    const startTime = document.getElementById('startTime').value;
+    const endTime = document.getElementById('endTime').value;
+    const displayTotalCost = document.getElementById('displayTotalCost');
+    const displayDuration = document.getElementById('displayDuration');
+
+    if (!venueSelect.value || !startTime || !endTime) {
+      displayTotalCost.textContent = '$0';
+      displayDuration.textContent = '(0 hrs)';
+      return;
+    }
+
+    const selectedOption = venueSelect.options[venueSelect.selectedIndex];
+    const rate = Number(selectedOption.getAttribute('data-rate')) || 0;
+
+    const [startH, startM] = startTime.split(':').map(Number);
+    const [endH, endM] = endTime.split(':').map(Number);
+
+    const startMins = startH * 60 + startM;
+    const endMins = endH * 60 + endM;
+
+    if (endMins > startMins) {
+      const durationHours = (endMins - startMins) / 60;
+      const totalCost = Math.round(durationHours * rate);
+      displayTotalCost.textContent = '$' + totalCost;
+      displayDuration.textContent = `(${durationHours.toFixed(1)} hrs)`;
+    } else {
+      displayTotalCost.textContent = '$0';
+      displayDuration.textContent = '(Invalid time)';
+    }
+  }
+
+  function handleVenueChange(select) {
+    calculateTotal();
+  }
+
+  function selectAlternativeVenue(venueId) {
+    const venueSelect = document.getElementById('venueId');
+    venueSelect.value = venueId;
+    calculateTotal();
+    document.getElementById('bookingForm').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function selectAlternativeSlot(start, end) {
+    document.getElementById('startTime').value = start;
+    document.getElementById('endTime').value = end;
+    calculateTotal();
+    document.getElementById('bookingForm').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // Initial calculation on load
+  document.addEventListener('DOMContentLoaded', calculateTotal);
+</script>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,316 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+<%- include('../partials/alerts') %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+  
+  <!-- Breadcrumb -->
+  <nav class="flex items-center gap-2 text-xs text-slate-500 mb-6">
+    <a href="/" class="hover:text-brand-600 transition-colors">Home</a>
+    <span>/</span>
+    <a href="/venues" class="hover:text-brand-600 transition-colors">Venues</a>
+    <span>/</span>
+    <span class="text-slate-800 font-bold"><%= venue.name %></span>
+  </nav>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    
+    <!-- Left 2 Cols: Venue Visuals, Specs, Schedule -->
+    <div class="lg:col-span-2 space-y-8">
+      
+      <!-- Hero Image & Title Box -->
+      <div class="bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm">
+        <div class="relative h-72 sm:h-96 w-full bg-slate-900">
+          <img 
+            src="<%= venue.featuredImage || (venue.images && venue.images[0]) || 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1200&q=80' %>" 
+            alt="<%= venue.name %>" 
+            class="w-full h-full object-cover opacity-90"
+          >
+          <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
+          
+          <!-- Top Badges -->
+          <div class="absolute top-4 left-4 flex flex-wrap items-center gap-2">
+            <span class="px-3 py-1 rounded-xl text-xs font-extrabold uppercase tracking-wider bg-slate-900/80 backdrop-blur-md text-white border border-white/20">
+              <%= venue.code %>
+            </span>
+            <span class="px-3 py-1 rounded-xl text-xs font-bold bg-brand-600/90 backdrop-blur-md text-white">
+              <%= venue.category %>
+            </span>
+            <% if (venue.status === 'maintenance') { %>
+              <span class="px-3 py-1 rounded-xl text-xs font-bold bg-amber-500 text-white">
+                <i class="fa-solid fa-wrench mr-1"></i> Maintenance
+              </span>
+            <% } else if (venue.status === 'active') { %>
+              <span class="px-3 py-1 rounded-xl text-xs font-bold bg-emerald-600/90 backdrop-blur-md text-white flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"></span> Available for Booking
+              </span>
+            <% } %>
+          </div>
+
+          <!-- Bottom Banner -->
+          <div class="absolute bottom-6 left-6 right-6 text-white space-y-2">
+            <h1 class="font-heading font-extrabold text-2xl sm:text-4xl tracking-tight text-white drop-shadow-md">
+              <%= venue.name %>
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-200 flex items-center gap-2 drop-shadow">
+              <i class="fa-solid fa-location-dot text-brand-400"></i>
+              <%= venue.location %> • <%= venue.building %> (<%= venue.floor %>)
+            </p>
+          </div>
+        </div>
+
+        <!-- Specifications Strip -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-6 bg-slate-50/70 border-t border-slate-100 text-center">
+          <div class="p-3 rounded-2xl bg-white border border-slate-100 shadow-sm">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Max Capacity</span>
+            <span class="text-lg font-extrabold text-slate-900 font-heading"><%= venue.capacity %> Seats</span>
+          </div>
+          <div class="p-3 rounded-2xl bg-white border border-slate-100 shadow-sm">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Hourly Rate</span>
+            <span class="text-lg font-extrabold text-brand-600 font-heading">$<%= venue.hourlyRate %>/hr</span>
+          </div>
+          <div class="p-3 rounded-2xl bg-white border border-slate-100 shadow-sm">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Operating Window</span>
+            <span class="text-xs font-bold text-slate-800 mt-1 block">
+              <%= venue.operatingHours ? venue.operatingHours.openTime : '08:00' %> - <%= venue.operatingHours ? venue.operatingHours.closeTime : '22:00' %>
+            </span>
+          </div>
+          <div class="p-3 rounded-2xl bg-white border border-slate-100 shadow-sm">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Venue Status</span>
+            <span class="text-xs font-bold capitalize <%= venue.status === 'active' ? 'text-emerald-600' : 'text-amber-600' %> mt-1 block">
+              <%= venue.status %>
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Overview & Facilities -->
+      <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-6">
+        
+        <!-- Description -->
+        <div>
+          <h2 class="font-heading font-bold text-lg text-slate-900 mb-2 flex items-center gap-2">
+            <i class="fa-solid fa-align-left text-brand-600"></i> Venue Description & Overview
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+            <%= venue.description %>
+          </p>
+        </div>
+
+        <!-- Facilities -->
+        <div class="pt-6 border-t border-slate-100">
+          <h2 class="font-heading font-bold text-lg text-slate-900 mb-3 flex items-center gap-2">
+            <i class="fa-solid fa-microchip text-brand-600"></i> Equipped Facilities & Audio-Visual Amenities
+          </h2>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <% (venue.facilities || []).forEach(facility => { %>
+              <div class="flex items-center gap-2.5 p-3 rounded-xl bg-brand-50/50 border border-brand-100/60 text-xs font-semibold text-slate-800">
+                <i class="fa-solid fa-check text-brand-600 text-xs"></i>
+                <span><%= facility %></span>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+
+        <!-- Rules -->
+        <div class="pt-6 border-t border-slate-100">
+          <h2 class="font-heading font-bold text-lg text-slate-900 mb-3 flex items-center gap-2">
+            <i class="fa-solid fa-circle-info text-amber-500"></i> House Rules & Booking Guidelines
+          </h2>
+          <ul class="space-y-2 text-xs text-slate-600">
+            <% (venue.rules || []).forEach(rule => { %>
+              <li class="flex items-start gap-2">
+                <i class="fa-solid fa-chevron-right text-slate-400 text-[10px] mt-0.5"></i>
+                <span><%= rule %></span>
+              </li>
+            <% }) %>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- Schedule Timeline / Busy Slots Preview -->
+      <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="font-heading font-bold text-lg text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-calendar-days text-brand-600"></i> Upcoming Occupied Schedule
+          </h2>
+          <span class="text-[11px] font-semibold text-slate-400">Strict Overlap Guard Active</span>
+        </div>
+        <p class="text-xs text-slate-500">
+          Review existing approved and pending reservations before choosing your time slot.
+        </p>
+
+        <% if (upcomingBookings && upcomingBookings.length > 0) { %>
+          <div class="divide-y divide-slate-100">
+            <% upcomingBookings.forEach(booking => { %>
+              <div class="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-2 h-2 rounded-full <%= booking.status === 'Approved' ? 'bg-indigo-500' : 'bg-amber-500' %>"></span>
+                  <div>
+                    <span class="font-bold text-slate-900"><%= booking.eventTitle %></span>
+                    <span class="text-slate-400 text-[11px] ml-1">(<%= booking.eventType %>)</span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="text-slate-600 font-semibold">
+                    <i class="fa-regular fa-calendar text-[11px] mr-1 text-slate-400"></i>
+                    <%= new Date(booking.bookingDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                  </span>
+                  <span class="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-bold text-[11px]">
+                    <%= booking.startTime %> - <%= booking.endTime %>
+                  </span>
+                  <span class="px-2 py-0.5 rounded-md text-[10px] font-bold <%= booking.status === 'Approved' ? 'bg-indigo-100 text-indigo-800' : 'bg-amber-100 text-amber-800' %>">
+                    <%= booking.status %>
+                  </span>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <div class="p-6 rounded-2xl bg-slate-50 border border-slate-100 text-center text-xs text-slate-500">
+            <i class="fa-regular fa-calendar-check text-2xl text-emerald-500 mb-2 block"></i>
+            No upcoming bookings scheduled. All standard time slots are currently open!
+          </div>
+        <% } %>
+
+      </div>
+
+    </div>
+
+    <!-- Right Column: Sticky Booking Widget -->
+    <div class="lg:col-span-1 space-y-6">
+      
+      <div class="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-lg sticky top-24 space-y-6">
+        
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Reserve Venue</span>
+            <div class="flex items-baseline gap-1 mt-0.5">
+              <span class="text-2xl font-extrabold text-slate-900 font-heading">$<%= venue.hourlyRate %></span>
+              <span class="text-xs text-slate-500 font-semibold">/ hour</span>
+            </div>
+          </div>
+          <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-100 text-emerald-800">
+            Instant Request
+          </span>
+        </div>
+
+        <!-- Quick Slot Selector & Booking Form -->
+        <form action="/bookings/new" method="GET" class="space-y-4">
+          <input type="hidden" name="venueId" value="<%= venue._id %>">
+
+          <div>
+            <label for="widget_date" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Event Date *
+            </label>
+            <input 
+              type="date" 
+              name="date" 
+              id="widget_date" 
+              required
+              class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 font-semibold text-slate-800"
+            >
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label for="widget_start" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                Start Time
+              </label>
+              <input 
+                type="time" 
+                name="startTime" 
+                id="widget_start" 
+                value="10:00"
+                required
+                class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 font-semibold text-slate-800"
+              >
+            </div>
+            <div>
+              <label for="widget_end" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                End Time
+              </label>
+              <input 
+                type="time" 
+                name="endTime" 
+                id="widget_end" 
+                value="13:00"
+                required
+                class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 font-semibold text-slate-800"
+              >
+            </div>
+          </div>
+
+          <button 
+            type="submit" 
+            class="w-full py-3 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-gradient-to-r from-brand-600 to-accent-600 hover:from-brand-700 hover:to-accent-700 shadow-md shadow-brand-500/25 transition-all hover:scale-[1.02] flex items-center justify-center gap-2"
+          >
+            <i class="fa-solid fa-calendar-plus text-xs"></i>
+            Proceed to Booking Request
+          </button>
+        </form>
+
+        <!-- Highlights list -->
+        <div class="space-y-2 pt-2 border-t border-slate-100 text-[11px] text-slate-500">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-shield-halved text-emerald-500 text-xs"></i>
+            <span>Conflict-free automatic verification</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-file-invoice text-brand-500 text-xs"></i>
+            <span>Official digital booking pass with QR code</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-headset text-indigo-500 text-xs"></i>
+            <span>Direct campus venue manager support</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Similar Venues (Bottom) -->
+  <% if (similarVenues && similarVenues.length > 0) { %>
+    <div class="mt-14 pt-10 border-t border-slate-200">
+      <h3 class="font-heading font-extrabold text-2xl text-slate-900 mb-6">
+        Other Venues in <%= venue.category %>
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <% similarVenues.forEach(sim => { %>
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow space-y-3">
+            <div class="h-36 rounded-2xl overflow-hidden bg-slate-100">
+              <img src="<%= sim.featuredImage || (sim.images && sim.images[0]) %>" alt="<%= sim.name %>" class="w-full h-full object-cover">
+            </div>
+            <div>
+              <span class="text-[10px] font-bold text-brand-600 uppercase"><%= sim.code %></span>
+              <h4 class="font-heading font-bold text-base text-slate-900">
+                <a href="/venues/<%= sim._id %>" class="hover:text-brand-600"><%= sim.name %></a>
+              </h4>
+              <p class="text-xs text-slate-500"><%= sim.capacity %> Seats • $<%= sim.hourlyRate %>/hr</p>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  <% } %>
+
+</div>
+
+<script>
+  // Set default date to tomorrow in widget
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  const dateStr = d.toISOString().split('T')[0];
+  const widgetDate = document.getElementById('widget_date');
+  if (widgetDate && !widgetDate.value) {
+    widgetDate.value = dateStr;
+    widgetDate.min = new Date().toISOString().split('T')[0];
+  }
+</script>
+
+<%- include('../partials/footer') %>

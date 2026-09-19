@@ -1,0 +1,177 @@
+<%- include('../../partials/header') %>
+<%- include('../../partials/navbar') %>
+<%- include('../../partials/alerts') %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
+  
+  <!-- Header -->
+  <div class="space-y-1">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold mb-1">
+      <i class="fa-solid fa-screwdriver-wrench"></i> Facilities & Maintenance
+    </div>
+    <h1 class="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900 tracking-tight">
+      Venue Maintenance & Blackout Dates
+    </h1>
+    <p class="text-xs text-slate-500">
+      Block campus halls for scheduled maintenance, examinations, or renovations. The engine automatically prevents organizer bookings during these windows.
+    </p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    
+    <!-- Left Column: Block Maintenance Form -->
+    <div class="lg:col-span-1 space-y-4">
+      <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+        <h3 class="font-heading font-bold text-base text-slate-900 flex items-center gap-2 pb-3 border-b border-slate-100">
+          <i class="fa-solid fa-calendar-xmark text-amber-500"></i> Schedule Maintenance Block
+        </h3>
+
+        <form action="/admin/maintenance" method="POST" class="space-y-4">
+          
+          <div>
+            <label for="venueId" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Select Venue *
+            </label>
+            <select 
+              name="venueId" 
+              id="venueId" 
+              required
+              class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 bg-white font-semibold"
+            >
+              <option value="">-- Choose Venue to Block --</option>
+              <% venues.forEach(v => { %>
+                <option value="<%= v._id %>"><%= v.name %> (<%= v.code %>)</option>
+              <% }) %>
+            </select>
+          </div>
+
+          <div>
+            <label for="title" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Task Title *
+            </label>
+            <input 
+              type="text" 
+              name="title" 
+              id="title" 
+              required
+              placeholder="e.g. HVAC Filter Replacement"
+              class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
+            >
+          </div>
+
+          <div>
+            <label for="reason" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Maintenance Reason / Notes *
+            </label>
+            <textarea 
+              name="reason" 
+              id="reason" 
+              required
+              rows="2"
+              placeholder="Scheduled routine maintenance before semester examinations..."
+              class="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
+            ></textarea>
+          </div>
+
+          <div>
+            <label for="blockDate" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Blackout Date *
+            </label>
+            <input 
+              type="date" 
+              name="blockDate" 
+              id="blockDate" 
+              required
+              class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 font-semibold"
+            >
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label for="startTime" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                Start Time
+              </label>
+              <input 
+                type="time" 
+                name="startTime" 
+                id="startTime" 
+                value="08:00"
+                required
+                class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/30 font-semibold"
+              >
+            </div>
+            <div>
+              <label for="endTime" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                End Time
+              </label>
+              <input 
+                type="time" 
+                name="endTime" 
+                id="endTime" 
+                value="18:00"
+                required
+                class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/30 font-semibold"
+              >
+            </div>
+          </div>
+
+          <button 
+            type="submit" 
+            class="w-full py-3 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-amber-600 hover:bg-amber-700 shadow-md shadow-amber-500/20 transition-all hover:scale-[1.02] flex items-center justify-center gap-1.5"
+          >
+            <i class="fa-solid fa-lock text-xs"></i> Block Venue Slot
+          </button>
+
+        </form>
+      </div>
+    </div>
+
+    <!-- Right Column: Existing Maintenance Blackouts -->
+    <div class="lg:col-span-2 space-y-4">
+      <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+        <h3 class="font-heading font-bold text-lg text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-list-check text-amber-500"></i> Active Maintenance Schedules (<%= maintenanceBlocks.length %>)
+        </h3>
+
+        <% if (maintenanceBlocks && maintenanceBlocks.length > 0) { %>
+          <div class="divide-y divide-slate-100">
+            <% maintenanceBlocks.forEach(m => { %>
+              <div class="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 uppercase">
+                      <%= m.venue ? m.venue.code : 'VENUE' %>
+                    </span>
+                    <h4 class="font-bold text-slate-900 text-sm"><%= m.title %></h4>
+                  </div>
+                  <p class="text-slate-600 text-xs"><%= m.reason %></p>
+                  <p class="text-slate-400 text-[11px]">
+                    <i class="fa-regular fa-calendar text-[10px] mr-1"></i>
+                    <%= new Date(m.blockDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) %> • 
+                    <span class="font-mono font-semibold text-slate-700"><%= m.startTime %> - <%= m.endTime %></span>
+                  </p>
+                </div>
+
+                <form action="/admin/maintenance/<%= m._id %>/delete" method="POST" class="shrink-0" onsubmit="return confirm('Lift maintenance block and make this slot available for booking?');">
+                  <button type="submit" class="py-1.5 px-3 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors flex items-center gap-1">
+                    <i class="fa-solid fa-unlock text-[10px]"></i> Lift Block
+                  </button>
+                </form>
+              </div>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <div class="p-8 rounded-2xl bg-slate-50 text-center text-xs text-slate-500 space-y-2">
+            <i class="fa-solid fa-circle-check text-2xl text-emerald-500 block"></i>
+            <span>No active maintenance blocks. All venues operating normally.</span>
+          </div>
+        <% } %>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<%- include('../../partials/footer') %>

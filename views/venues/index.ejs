@@ -1,0 +1,274 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+<%- include('../partials/alerts') %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+  
+  <!-- Header Title -->
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+    <div class="space-y-1">
+      <span class="text-xs font-bold uppercase tracking-wider text-brand-600 font-heading">Campus Directory</span>
+      <h1 class="font-heading font-extrabold text-3xl sm:text-4xl text-slate-900 tracking-tight">
+        Explore Campus Venues & Halls
+      </h1>
+      <p class="text-xs sm:text-sm text-slate-500 max-w-xl">
+        Filter by seating capacity, AV amenities, multimedia equipment, and hourly rates to find the ideal space for your event.
+      </p>
+    </div>
+
+    <!-- Total Match Count Badge -->
+    <div class="text-xs font-bold text-slate-700 bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm flex items-center gap-2 self-start md:self-auto">
+      <i class="fa-solid fa-list-check text-brand-500"></i>
+      <span>Showing <strong class="text-brand-600"><%= totalCount %></strong> Available Venues</span>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+    
+    <!-- Left Filter Sidebar -->
+    <div class="lg:col-span-1 space-y-6">
+      <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm sticky top-24 space-y-6">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+          <h3 class="font-heading font-bold text-sm text-slate-900 uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-sliders text-brand-600"></i> Search Filters
+          </h3>
+          <a href="/venues" class="text-[11px] font-semibold text-rose-600 hover:underline">Reset All</a>
+        </div>
+
+        <form action="/venues" method="GET" class="space-y-5" id="filterForm">
+          
+          <!-- Keyword Search -->
+          <div>
+            <label for="search" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+              Keyword
+            </label>
+            <div class="relative">
+              <input 
+                type="text" 
+                name="search" 
+                id="search"
+                value="<%= filters.search %>"
+                placeholder="Hall name, building..."
+                class="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-slate-300 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
+              >
+              <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-400 text-xs"></i>
+            </div>
+          </div>
+
+          <!-- Category Dropdown -->
+          <div>
+            <label for="category" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+              Category
+            </label>
+            <select 
+              name="category" 
+              id="category"
+              class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 bg-white"
+            >
+              <option value="All" <%= filters.category === 'All' ? 'selected' : '' %>>All Categories</option>
+              <% allCategories.forEach(cat => { %>
+                <option value="<%= cat %>" <%= filters.category === cat ? 'selected' : '' %>><%= cat %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <!-- Capacity Range -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+              Seating Capacity
+            </label>
+            <div class="grid grid-cols-2 gap-2">
+              <input 
+                type="number" 
+                name="minCapacity" 
+                placeholder="Min seats"
+                min="0"
+                value="<%= filters.minCapacity %>"
+                class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
+              >
+              <input 
+                type="number" 
+                name="maxCapacity" 
+                placeholder="Max seats"
+                min="0"
+                value="<%= filters.maxCapacity %>"
+                class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
+              >
+            </div>
+          </div>
+
+          <!-- Max Hourly Rate -->
+          <div>
+            <label for="maxRate" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+              Max Hourly Rate ($)
+            </label>
+            <input 
+              type="number" 
+              name="maxRate" 
+              id="maxRate"
+              placeholder="e.g. 150"
+              min="0"
+              value="<%= filters.maxRate %>"
+              class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
+            >
+          </div>
+
+          <!-- Facilities Multi-select Checkboxes -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
+              Required Amenities
+            </label>
+            <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+              <% standardFacilities.forEach(facility => { %>
+                <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-700 hover:text-brand-600">
+                  <input 
+                    type="checkbox" 
+                    name="facilities" 
+                    value="<%= facility %>"
+                    <%= (filters.facilities || []).includes(facility) ? 'checked' : '' %>
+                    class="rounded text-brand-600 focus:ring-brand-500 h-3.5 w-3.5 border-slate-300"
+                  >
+                  <span><%= facility %></span>
+                </label>
+              <% }) %>
+            </div>
+          </div>
+
+          <!-- Sort Order -->
+          <div>
+            <label for="sortBy" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+              Sort Order
+            </label>
+            <select 
+              name="sortBy" 
+              id="sortBy"
+              class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 bg-white"
+            >
+              <option value="default" <%= filters.sortBy === 'default' ? 'selected' : '' %>>Default (Featured first)</option>
+              <option value="price_asc" <%= filters.sortBy === 'price_asc' ? 'selected' : '' %>>Price: Low to High</option>
+              <option value="price_desc" <%= filters.sortBy === 'price_desc' ? 'selected' : '' %>>Price: High to Low</option>
+              <option value="capacity_desc" <%= filters.sortBy === 'capacity_desc' ? 'selected' : '' %>>Capacity: Largest first</option>
+              <option value="capacity_asc" <%= filters.sortBy === 'capacity_asc' ? 'selected' : '' %>>Capacity: Smallest first</option>
+              <option value="name_asc" <%= filters.sortBy === 'name_asc' ? 'selected' : '' %>>Venue Name (A-Z)</option>
+            </select>
+          </div>
+
+          <button 
+            type="submit" 
+            class="w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-brand-600 hover:bg-brand-700 shadow-md shadow-brand-500/20 transition-all hover:scale-[1.02]"
+          >
+            Apply Filters
+          </button>
+
+        </form>
+      </div>
+    </div>
+
+    <!-- Right Venues Grid -->
+    <div class="lg:col-span-3 space-y-6">
+      
+      <% if (venues && venues.length > 0) { %>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <% venues.forEach(venue => { %>
+            <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group hover:-translate-y-1">
+              
+              <!-- Image & Top Badges -->
+              <div class="relative h-52 w-full overflow-hidden bg-slate-100">
+                <img 
+                  src="<%= venue.featuredImage || (venue.images && venue.images[0]) || 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=800&q=80' %>" 
+                  alt="<%= venue.name %>" 
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                >
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
+                
+                <div class="absolute top-3 left-3 flex items-center gap-1.5">
+                  <span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider bg-slate-900/80 backdrop-blur-md text-white border border-white/10">
+                    <%= venue.code %>
+                  </span>
+                  <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-brand-600/90 backdrop-blur-md text-white">
+                    <%= venue.category %>
+                  </span>
+                </div>
+
+                <div class="absolute bottom-3 right-3 px-3 py-1 rounded-xl bg-white/95 backdrop-blur-md text-slate-900 shadow-md">
+                  <span class="font-extrabold text-sm">$<%= venue.hourlyRate %></span>
+                  <span class="text-[10px] text-slate-500 font-semibold">/hr</span>
+                </div>
+
+                <div class="absolute bottom-3 left-3 text-white flex items-center gap-1.5 text-xs font-semibold">
+                  <i class="fa-solid fa-users text-xs text-brand-300"></i>
+                  <span><%= venue.capacity %> Max Capacity</span>
+                </div>
+              </div>
+
+              <!-- Body Details -->
+              <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
+                <div>
+                  <h3 class="font-heading font-extrabold text-lg text-slate-900 group-hover:text-brand-600 transition-colors">
+                    <a href="/venues/<%= venue._id %>"><%= venue.name %></a>
+                  </h3>
+                  
+                  <div class="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                    <span class="flex items-center gap-1"><i class="fa-solid fa-location-dot text-slate-400"></i> <%= venue.location %></span>
+                    <span>•</span>
+                    <span class="text-slate-400"><%= venue.floor %></span>
+                  </div>
+
+                  <p class="text-xs text-slate-600 mt-2.5 line-clamp-2 leading-relaxed">
+                    <%= venue.description %>
+                  </p>
+                </div>
+
+                <!-- Facilities Badges -->
+                <div class="pt-2 border-t border-slate-100">
+                  <div class="flex flex-wrap gap-1.5 mb-4">
+                    <% (venue.facilities || []).slice(0, 3).forEach(facility => { %>
+                      <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-600">
+                        <%= facility %>
+                      </span>
+                    <% }) %>
+                    <% if (venue.facilities && venue.facilities.length > 3) { %>
+                      <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-50 text-slate-400">
+                        +<%= venue.facilities.length - 3 %> more
+                      </span>
+                    <% } %>
+                  </div>
+
+                  <!-- Actions -->
+                  <div class="grid grid-cols-2 gap-2">
+                    <a href="/venues/<%= venue._id %>" class="py-2.5 px-3 rounded-xl text-xs font-bold text-center text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">
+                      View Details
+                    </a>
+                    <a href="/bookings/new?venueId=<%= venue._id %>" class="py-2.5 px-3 rounded-xl text-xs font-bold text-center text-white bg-brand-600 hover:bg-brand-700 shadow-md shadow-brand-500/20 transition-all hover:scale-[1.02]">
+                      Book Slot &rarr;
+                    </a>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <!-- Empty State -->
+        <div class="bg-white p-12 rounded-3xl border border-slate-200 text-center space-y-4">
+          <div class="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center text-2xl mx-auto">
+            <i class="fa-solid fa-building-circle-xmark"></i>
+          </div>
+          <h3 class="font-heading font-extrabold text-xl text-slate-900">No Venues Match Your Filters</h3>
+          <p class="text-xs text-slate-500 max-w-sm mx-auto">
+            Try adjusting your capacity range, clearing required amenities, or searching with broader keywords.
+          </p>
+          <a href="/venues" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-brand-600 bg-brand-50 hover:bg-brand-100 transition-colors">
+            Reset All Filters
+          </a>
+        </div>
+      <% } %>
+
+    </div>
+
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

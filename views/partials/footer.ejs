@@ -1,0 +1,83 @@
+<footer class="mt-auto bg-slate-900 text-slate-300 border-t border-slate-800">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+      
+      <!-- Brand & Mission -->
+      <div class="md:col-span-1 space-y-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-500 to-accent-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+            <i class="fa-solid fa-landmark text-base"></i>
+          </div>
+          <span class="font-heading font-extrabold text-xl text-white tracking-tight">
+            Campus<span class="text-brand-400">Venue</span>
+          </span>
+        </div>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Comprehensive event & venue booking platform for campus facilities, auditoriums, seminar halls, and community spaces.
+        </p>
+        <div class="flex items-center gap-3 text-slate-400 pt-1">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-800 text-emerald-400 border border-emerald-500/20">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            System Live & Operational
+          </span>
+        </div>
+      </div>
+
+      <!-- Quick Links -->
+      <div>
+        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-200 mb-3 font-heading">Explore Platform</h4>
+        <ul class="space-y-2 text-xs">
+          <li><a href="/venues" class="text-slate-400 hover:text-white transition-colors">All Campus Venues</a></li>
+          <li><a href="/venues?category=Auditorium" class="text-slate-400 hover:text-white transition-colors">Auditoriums & Halls</a></li>
+          <li><a href="/venues?category=Conference+Hall" class="text-slate-400 hover:text-white transition-colors">Conference Centers</a></li>
+          <li><a href="/venues?category=Workshop+Lab" class="text-slate-400 hover:text-white transition-colors">Tech & Workshop Labs</a></li>
+        </ul>
+      </div>
+
+      <!-- User Workspaces -->
+      <div>
+        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-200 mb-3 font-heading">Portals & Access</h4>
+        <ul class="space-y-2 text-xs">
+          <li><a href="/organiser/dashboard" class="text-slate-400 hover:text-white transition-colors">Organiser Workspace</a></li>
+          <li><a href="/bookings/new" class="text-slate-400 hover:text-white transition-colors">Request a Booking</a></li>
+          <li><a href="/admin/dashboard" class="text-slate-400 hover:text-white transition-colors">Venue Manager Portal</a></li>
+          <li><a href="/admin/bookings" class="text-slate-400 hover:text-white transition-colors">Approval Workflow</a></li>
+        </ul>
+      </div>
+
+      <!-- Facilities & Support -->
+      <div class="bg-slate-800/80 rounded-2xl p-4 border border-slate-700/60 text-xs space-y-2.5">
+        <h4 class="text-xs font-bold text-white flex items-center gap-1.5 font-heading">
+          <i class="fa-solid fa-headset text-brand-400"></i> Facilities Support
+        </h4>
+        <p class="text-[11px] text-slate-400">Estate Management & Venue Administration Office:</p>
+        <div class="space-y-1.5 text-[11px] text-slate-300">
+          <div class="flex items-center gap-2">
+            <i class="fa-regular fa-envelope text-slate-400 w-4"></i>
+            <span>facilities@campus.edu</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-phone text-slate-400 w-4"></i>
+            <span>+1 (555) 019-2834</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-location-dot text-slate-400 w-4"></i>
+            <span>Estate Management, Room 102</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="mt-10 pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+      <p>© <%= new Date().getFullYear() %> Campus Event & Venue Booking Management System. Built with Node.js, Express, EJS, and MongoDB Atlas.</p>
+      <div class="flex items-center gap-4">
+        <span class="flex items-center gap-1"><i class="fa-solid fa-shield-halved text-brand-400"></i> Overlap Prevention Engine</span>
+        <span class="flex items-center gap-1"><i class="fa-solid fa-bolt text-amber-400"></i> Auto-Suggest Enabled</span>
+      </div>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

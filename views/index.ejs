@@ -1,0 +1,373 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+<%- include('partials/alerts') %>
+
+<!-- Hero Section -->
+<section class="relative overflow-hidden pt-8 pb-16 lg:pt-14 lg:pb-24 bg-gradient-to-b from-slate-50 via-indigo-50/30 to-slate-50 border-b border-slate-200/60">
+  <!-- Decorative Background Glows -->
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-r from-brand-500/10 via-accent-500/10 to-indigo-500/10 blur-3xl -z-10 pointer-events-none rounded-full"></div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center max-w-3xl mx-auto space-y-6">
+      
+      <!-- Live Status Badge -->
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-brand-200 shadow-sm text-xs font-bold text-brand-700 animate-fade-in">
+        <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+        <span>Campus Event & Venue Booking Engine</span>
+        <span class="text-slate-300">|</span>
+        <span class="text-slate-500 font-medium">Overlapping Conflict Protection</span>
+      </div>
+
+      <!-- Main Headline -->
+      <h1 class="font-heading font-extrabold text-4xl sm:text-5xl lg:text-6xl text-slate-900 tracking-tight leading-[1.15]">
+        Book Campus Venues with <br class="hidden sm:inline">
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-accent-600 to-indigo-700">Zero Scheduling Conflicts</span>
+      </h1>
+
+      <!-- Subtitle -->
+      <p class="text-base sm:text-lg text-slate-600 font-normal max-w-2xl mx-auto leading-relaxed">
+        Effortlessly search auditoriums, seminar halls, conference suites, and open-air amphitheatres. Request bookings, manage approvals, and automate conflict-free scheduling.
+      </p>
+
+      <!-- Quick Search Bar Widget -->
+      <div class="pt-2">
+        <form action="/venues" method="GET" class="bg-white p-2.5 sm:p-3 rounded-2xl shadow-xl shadow-slate-200/80 border border-slate-200 max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-4 gap-2 text-left">
+          
+          <!-- Keyword -->
+          <div class="sm:col-span-1 border-b sm:border-b-0 sm:border-r border-slate-100 px-3 py-1.5">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Search Venue</label>
+            <input type="text" name="search" placeholder="e.g. Auditorium, Lab" class="w-full text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none bg-transparent">
+          </div>
+
+          <!-- Category -->
+          <div class="sm:col-span-1 border-b sm:border-b-0 sm:border-r border-slate-100 px-3 py-1.5">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Category</label>
+            <select name="category" class="w-full text-xs font-semibold text-slate-800 focus:outline-none bg-transparent cursor-pointer">
+              <option value="All">All Categories</option>
+              <option value="Auditorium">Auditorium</option>
+              <option value="Conference Hall">Conference Hall</option>
+              <option value="Seminar Room">Seminar Room</option>
+              <option value="Amphitheatre">Amphitheatre</option>
+              <option value="Workshop Lab">Workshop Lab</option>
+              <option value="Banquet Hall">Banquet Hall</option>
+            </select>
+          </div>
+
+          <!-- Capacity -->
+          <div class="sm:col-span-1 px-3 py-1.5">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Min Capacity</label>
+            <input type="number" name="minCapacity" placeholder="e.g. 100 seats" min="1" class="w-full text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none bg-transparent">
+          </div>
+
+          <!-- Search Button -->
+          <div class="sm:col-span-1 flex items-center">
+            <button type="submit" class="w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-gradient-to-r from-brand-600 to-accent-600 hover:from-brand-700 hover:to-accent-700 shadow-md shadow-brand-500/20 transition-all hover:scale-[1.02] flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-magnifying-glass text-xs"></i> Find Venues
+            </button>
+          </div>
+
+        </form>
+      </div>
+
+      <!-- Quick Action CTAs -->
+      <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
+        <a href="/venues" class="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 shadow-sm transition-all hover:-translate-y-0.5 flex items-center gap-2">
+          <i class="fa-solid fa-compass text-brand-600"></i> Explore All Venues
+        </a>
+        <% if (!user) { %>
+          <a href="/auth/register" class="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-brand-600 hover:bg-brand-700 shadow-md shadow-brand-500/20 transition-all hover:-translate-y-0.5 flex items-center gap-2">
+            <i class="fa-solid fa-calendar-plus"></i> Book a Venue
+          </a>
+        <% } else if (user.role === 'admin') { %>
+          <a href="/admin/dashboard" class="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 shadow-sm transition-all hover:-translate-y-0.5 flex items-center gap-2">
+            <i class="fa-solid fa-gauge text-indigo-600"></i> Admin Dashboard
+          </a>
+        <% } else { %>
+          <a href="/organiser/bookings/new" class="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-brand-600 hover:bg-brand-700 shadow-md shadow-brand-500/20 transition-all hover:-translate-y-0.5 flex items-center gap-2">
+            <i class="fa-solid fa-calendar-plus"></i> Request Booking
+          </a>
+        <% } %>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Live Stats Ticker Bar -->
+<section class="bg-white border-b border-slate-200/80 py-6">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+      
+      <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+        <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 font-heading"><%= stats.totalVenues %></div>
+        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mt-1">Campus Venues</p>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+        <div class="text-2xl sm:text-3xl font-extrabold text-brand-600 font-heading"><%= stats.totalBookings %></div>
+        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mt-1">Bookings Managed</p>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+        <div class="text-2xl sm:text-3xl font-extrabold text-accent-600 font-heading"><%= stats.totalOrganisers %>+</div>
+        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mt-1">Campus Organisers</p>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-100">
+        <div class="text-2xl sm:text-3xl font-extrabold text-emerald-600 font-heading flex items-center justify-center gap-1">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <%= stats.todayEventsCount %>
+        </div>
+        <p class="text-xs font-bold text-emerald-700 uppercase tracking-wider mt-1">Today's Live Events</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Today's Campus Events Schedule Feed (If Any) -->
+<% if (todayEvents && todayEvents.length > 0) { %>
+<section class="py-10 bg-slate-100/60 border-b border-slate-200/80">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-sm shadow-md">
+          <i class="fa-solid fa-clock"></i>
+        </div>
+        <div>
+          <h3 class="font-heading font-extrabold text-xl text-slate-900 tracking-tight flex items-center gap-2">
+            Today's Campus Schedule
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+              Live Feed
+            </span>
+          </h3>
+          <p class="text-xs text-slate-500">Events happening today across campus halls and venues</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <% todayEvents.forEach(evt => { %>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+          <div class="absolute top-0 left-0 bottom-0 w-1.5 bg-emerald-500"></div>
+          
+          <div class="flex items-start justify-between gap-2 mb-2 pl-2">
+            <span class="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700">
+              <%= evt.eventType %>
+            </span>
+            <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md flex items-center gap-1">
+              <i class="fa-regular fa-clock text-[10px]"></i>
+              <%= evt.startTime %> - <%= evt.endTime %>
+            </span>
+          </div>
+
+          <div class="pl-2 space-y-1.5">
+            <h4 class="font-heading font-bold text-base text-slate-900 line-clamp-1 group-hover:text-brand-600 transition-colors">
+              <%= evt.eventTitle %>
+            </h4>
+            <p class="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
+              <i class="fa-solid fa-building text-slate-400 text-xs"></i>
+              <%= evt.venue ? evt.venue.name : 'Campus Venue' %>
+            </p>
+            <p class="text-[11px] text-slate-400 flex items-center gap-1">
+              <i class="fa-solid fa-users text-[10px]"></i>
+              <%= evt.expectedAttendees %> Attendees Expected
+            </p>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+</section>
+<% } %>
+
+<!-- Featured Venues Showcase -->
+<section class="py-16 bg-slate-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
+      <div class="space-y-1">
+        <span class="text-xs font-bold uppercase tracking-wider text-brand-600 font-heading">Campus Spaces</span>
+        <h2 class="font-heading font-extrabold text-3xl text-slate-900 tracking-tight">
+          Featured Venues & Halls
+        </h2>
+        <p class="text-xs text-slate-500 max-w-lg">
+          State-of-the-art auditoriums, multi-purpose seminar rooms, high-tech labs, and amphitheatre spaces ready for reservation.
+        </p>
+      </div>
+
+      <a href="/venues" class="inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 hover:text-brand-700 hover:underline">
+        Browse Complete Catalogue (<%= stats.totalVenues %> spaces) &rarr;
+      </a>
+    </div>
+
+    <!-- Venues Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <% if (featuredVenues && featuredVenues.length > 0) { %>
+        <% featuredVenues.forEach(venue => { %>
+          <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group hover:-translate-y-1">
+            
+            <!-- Photo & Badges -->
+            <div class="relative h-48 sm:h-52 w-full overflow-hidden bg-slate-100">
+              <img 
+                src="<%= venue.featuredImage || (venue.images && venue.images[0]) || 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=800&q=80' %>" 
+                alt="<%= venue.name %>" 
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              >
+              <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
+              
+              <!-- Code / Category Badge -->
+              <div class="absolute top-3 left-3 flex items-center gap-1.5">
+                <span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider bg-slate-900/80 backdrop-blur-md text-white border border-white/10">
+                  <%= venue.code %>
+                </span>
+                <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-brand-600/90 backdrop-blur-md text-white">
+                  <%= venue.category %>
+                </span>
+              </div>
+
+              <!-- Price Tag -->
+              <div class="absolute bottom-3 right-3 px-3 py-1 rounded-xl bg-white/95 backdrop-blur-md text-slate-900 shadow-md">
+                <span class="font-extrabold text-sm">$<%= venue.hourlyRate %></span>
+                <span class="text-[10px] text-slate-500 font-semibold">/hr</span>
+              </div>
+
+              <!-- Capacity Tag -->
+              <div class="absolute bottom-3 left-3 text-white flex items-center gap-1.5 text-xs font-semibold">
+                <i class="fa-solid fa-users text-xs text-brand-300"></i>
+                <span><%= venue.capacity %> Seats</span>
+              </div>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
+              <div>
+                <h3 class="font-heading font-extrabold text-lg text-slate-900 group-hover:text-brand-600 transition-colors">
+                  <a href="/venues/<%= venue._id %>"><%= venue.name %></a>
+                </h3>
+                <p class="text-xs text-slate-500 flex items-center gap-1.5 mt-1">
+                  <i class="fa-solid fa-location-dot text-slate-400"></i>
+                  <%= venue.location %>
+                </p>
+                <p class="text-xs text-slate-600 mt-2.5 line-clamp-2 leading-relaxed">
+                  <%= venue.description %>
+                </p>
+              </div>
+
+              <!-- Facilities Badges -->
+              <div class="pt-2 border-t border-slate-100">
+                <div class="flex flex-wrap gap-1.5 mb-4">
+                  <% (venue.facilities || []).slice(0, 3).forEach(facility => { %>
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-600">
+                      <%= facility %>
+                    </span>
+                  <% }) %>
+                  <% if (venue.facilities && venue.facilities.length > 3) { %>
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-50 text-slate-400">
+                      +<%= venue.facilities.length - 3 %> more
+                    </span>
+                  <% } %>
+                </div>
+
+                <!-- Action Button -->
+                <div class="grid grid-cols-2 gap-2">
+                  <a href="/venues/<%= venue._id %>" class="py-2.5 px-3 rounded-xl text-xs font-bold text-center text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">
+                    Details
+                  </a>
+                  <a href="/bookings/new?venueId=<%= venue._id %>" class="py-2.5 px-3 rounded-xl text-xs font-bold text-center text-white bg-brand-600 hover:bg-brand-700 shadow-md shadow-brand-500/20 transition-all hover:scale-[1.02]">
+                    Book Slot &rarr;
+                  </a>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        <% }) %>
+      <% } %>
+    </div>
+
+  </div>
+</section>
+
+<!-- Smart Features Grid -->
+<section class="py-16 bg-white border-t border-slate-200/80">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <div class="text-center max-w-2xl mx-auto space-y-3 mb-14">
+      <span class="text-xs font-bold uppercase tracking-wider text-brand-600 font-heading">Engineered for Efficiency</span>
+      <h2 class="font-heading font-extrabold text-3xl text-slate-900 tracking-tight">
+        Core Capabilities & Intelligence
+      </h2>
+      <p class="text-xs text-slate-500">
+        Everything needed to run complex campus scheduling without human error, double bookings, or venue downtime.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      
+      <!-- Feature 1: Overlap Prevention -->
+      <div class="p-8 rounded-3xl bg-slate-50 border border-slate-200/80 space-y-4 hover:border-brand-300 transition-colors">
+        <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-xl shadow-sm">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h3 class="font-heading font-bold text-xl text-slate-900">
+          Strict Overlap Prevention
+        </h3>
+        <p class="text-xs text-slate-600 leading-relaxed">
+          Our database conflict engine prevents multiple bookings for the same venue and time slot across pending and approved requests, eliminating double booking errors.
+        </p>
+      </div>
+
+      <!-- Feature 2: Smart Auto-Suggestions -->
+      <div class="p-8 rounded-3xl bg-slate-50 border border-slate-200/80 space-y-4 hover:border-brand-300 transition-colors">
+        <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl shadow-sm">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+        <h3 class="font-heading font-bold text-xl text-slate-900">
+          Smart Auto-Suggestions
+        </h3>
+        <p class="text-xs text-slate-600 leading-relaxed">
+          If a requested slot is occupied or under maintenance, the system instantly suggests matching alternative venues or available time slots on the same day.
+        </p>
+      </div>
+
+      <!-- Feature 3: Maintenance & Analytics -->
+      <div class="p-8 rounded-3xl bg-slate-50 border border-slate-200/80 space-y-4 hover:border-brand-300 transition-colors">
+        <div class="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl shadow-sm">
+          <i class="fa-solid fa-chart-line"></i>
+        </div>
+        <h3 class="font-heading font-bold text-xl text-slate-900">
+          Maintenance & Revenue Analytics
+        </h3>
+        <p class="text-xs text-slate-600 leading-relaxed">
+          Admins can easily block dates for maintenance, approve requests, monitor real-time venue utilization percentages, and track generated revenue.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-14 bg-gradient-to-r from-brand-900 via-indigo-900 to-slate-900 text-white relative overflow-hidden">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 relative z-10">
+    <h2 class="font-heading font-extrabold text-3xl sm:text-4xl tracking-tight">
+      Ready to Host Your Next Campus Event?
+    </h2>
+    <p class="text-xs sm:text-sm text-slate-300 max-w-xl mx-auto leading-relaxed">
+      Explore venue capacity, multimedia facilities, live availability schedules, and submit your reservation request in minutes.
+    </p>
+    <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
+      <a href="/venues" class="px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-900 bg-white hover:bg-slate-100 shadow-lg transition-all hover:scale-105">
+        Explore All Venues
+      </a>
+      <a href="/bookings/new" class="px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-brand-600 hover:bg-brand-500 shadow-lg shadow-brand-500/30 transition-all hover:scale-105">
+        Request a Booking Now &rarr;
+      </a>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

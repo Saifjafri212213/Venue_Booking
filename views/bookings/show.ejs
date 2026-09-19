@@ -1,0 +1,285 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+<%- include('../partials/alerts') %>
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+  
+  <!-- Action Bar -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 print:hidden">
+    <a href="/organiser/my-bookings" class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-brand-600">
+      &larr; Back to My Bookings
+    </a>
+
+    <div class="flex items-center gap-2">
+      <button 
+        type="button" 
+        onclick="window.print()" 
+        class="py-2 px-4 rounded-xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 shadow-sm flex items-center gap-1.5 transition-colors"
+      >
+        <i class="fa-solid fa-print text-slate-500"></i> Print / Download Pass
+      </button>
+
+      <% if (booking.status === 'Pending' || booking.status === 'Approved') { %>
+        <button 
+          type="button" 
+          onclick="openCancelModal()" 
+          class="py-2 px-4 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 shadow-sm flex items-center gap-1.5 transition-colors"
+        >
+          <i class="fa-solid fa-ban"></i> Cancel Booking
+        </button>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Booking Pass Official Ticket / Card -->
+  <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xl overflow-hidden print:shadow-none print:border">
+    
+    <!-- Top Pass Banner -->
+    <div class="bg-gradient-to-r from-brand-900 via-indigo-900 to-slate-900 text-white p-6 sm:p-8 relative overflow-hidden">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+        
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-white/20 text-white backdrop-blur-md">
+              Official Campus Pass
+            </span>
+            <span class="text-xs text-brand-300 font-mono font-bold tracking-wider">
+              <%= booking.bookingReference %>
+            </span>
+          </div>
+          <h1 class="font-heading font-extrabold text-2xl sm:text-3xl text-white tracking-tight">
+            <%= booking.eventTitle %>
+          </h1>
+          <p class="text-xs text-slate-300 flex items-center gap-1.5">
+            <i class="fa-solid fa-layer-group text-brand-400"></i>
+            <%= booking.eventType %> Event
+          </p>
+        </div>
+
+        <!-- Status Badge -->
+        <div class="self-start sm:self-center">
+          <% if (booking.status === 'Approved') { %>
+            <div class="px-4 py-2 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-extrabold uppercase tracking-wider flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              Booking Approved
+            </div>
+          <% } else if (booking.status === 'Pending') { %>
+            <div class="px-4 py-2 rounded-2xl bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-extrabold uppercase tracking-wider flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+              Awaiting Approval
+            </div>
+          <% } else if (booking.status === 'Completed') { %>
+            <div class="px-4 py-2 rounded-2xl bg-blue-500/20 border border-blue-400/40 text-blue-300 text-xs font-extrabold uppercase tracking-wider">
+              Completed
+            </div>
+          <% } else if (booking.status === 'Rejected') { %>
+            <div class="px-4 py-2 rounded-2xl bg-rose-500/20 border border-rose-400/40 text-rose-300 text-xs font-extrabold uppercase tracking-wider">
+              Request Rejected
+            </div>
+          <% } else { %>
+            <div class="px-4 py-2 rounded-2xl bg-slate-500/20 border border-slate-400/40 text-slate-300 text-xs font-extrabold uppercase tracking-wider">
+              <%= booking.status %>
+            </div>
+          <% } %>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Pass Body Grid -->
+    <div class="p-6 sm:p-8 space-y-8">
+      
+      <!-- Key Schedule Strip -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-5 rounded-2xl bg-slate-50 border border-slate-200/80 text-center">
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Event Date</span>
+          <span class="text-sm font-extrabold text-slate-900 mt-1 block">
+            <%= new Date(booking.bookingDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+          </span>
+        </div>
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Time Slot</span>
+          <span class="text-sm font-extrabold text-brand-600 mt-1 block font-mono">
+            <%= booking.startTime %> - <%= booking.endTime %>
+          </span>
+        </div>
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Total Duration</span>
+          <span class="text-sm font-extrabold text-slate-900 mt-1 block">
+            <%= booking.durationHours %> Hours
+          </span>
+        </div>
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Total Cost</span>
+          <span class="text-sm font-extrabold text-emerald-600 mt-1 block">
+            $<%= booking.totalCost %>
+          </span>
+        </div>
+      </div>
+
+      <!-- Venue & Organiser Split Details -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <!-- Venue Details -->
+        <div class="space-y-3">
+          <h3 class="font-heading font-bold text-xs uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+            <i class="fa-solid fa-landmark text-brand-600"></i> Venue Specifications
+          </h3>
+          <div class="p-4 rounded-2xl bg-white border border-slate-200 space-y-2 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="text-slate-500">Venue Name:</span>
+              <span class="font-bold text-slate-900"><%= booking.venue ? booking.venue.name : 'N/A' %></span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-slate-500">Venue Code:</span>
+              <span class="font-mono font-bold text-brand-600"><%= booking.venue ? booking.venue.code : 'N/A' %></span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-slate-500">Location:</span>
+              <span class="font-medium text-slate-800"><%= booking.venue ? booking.venue.location : 'Campus complex' %></span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-slate-500">Building / Floor:</span>
+              <span class="font-medium text-slate-800"><%= booking.venue ? booking.venue.building : 'Main' %> (<%= booking.venue ? booking.venue.floor : 'Ground' %>)</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-slate-500">Seating Capacity:</span>
+              <span class="font-bold text-slate-900"><%= booking.venue ? booking.venue.capacity : 0 %> Seats</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Organiser Details -->
+        <div class="space-y-3">
+          <h3 class="font-heading font-bold text-xs uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+            <i class="fa-solid fa-user-tie text-brand-600"></i> Organiser & Host Information
+          </h3>
+          <div class="p-4 rounded-2xl bg-white border border-slate-200 space-y-2 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="text-slate-500">Host Name:</span>
+              <span class="font-bold text-slate-900"><%= booking.organiser ? booking.organiser.name : 'Unknown' %></span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-slate-500">Organization:</span>
+              <span class="font-medium text-slate-800"><%= booking.organiser ? booking.organiser.organization : 'Campus Club' %></span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-slate-500">Department:</span>
+              <span class="font-medium text-slate-800"><%= booking.organiser ? booking.organiser.department : 'General' %></span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-slate-500">Email:</span>
+              <span class="font-medium text-slate-800"><%= booking.organiser ? booking.organiser.email : '' %></span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-slate-500">Expected Attendees:</span>
+              <span class="font-bold text-slate-900"><%= booking.expectedAttendees %> People</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Facilities & AV Setup -->
+      <% if (booking.specialFacilities && booking.specialFacilities.length > 0) { %>
+        <div class="space-y-3">
+          <h3 class="font-heading font-bold text-xs uppercase tracking-widest text-slate-400">
+            Requested Amenities & AV Setup
+          </h3>
+          <div class="flex flex-wrap gap-2">
+            <% booking.specialFacilities.forEach(f => { %>
+              <span class="px-3 py-1 rounded-xl text-xs font-semibold bg-brand-50 text-brand-700 border border-brand-200/60 flex items-center gap-1.5">
+                <i class="fa-solid fa-check text-brand-600 text-[10px]"></i>
+                <%= f %>
+              </span>
+            <% }) %>
+          </div>
+        </div>
+      <% } %>
+
+      <!-- Admin Remarks or Rejection Reason -->
+      <% if (booking.adminRemarks) { %>
+        <div class="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-100 text-xs text-indigo-900 space-y-1">
+          <span class="font-bold uppercase tracking-wider text-[10px] text-indigo-700 block">Venue Manager Remarks</span>
+          <p><%= booking.adminRemarks %></p>
+        </div>
+      <% } %>
+
+      <% if (booking.rejectionReason) { %>
+        <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-900 space-y-1">
+          <span class="font-bold uppercase tracking-wider text-[10px] text-rose-700 block">Rejection Reason</span>
+          <p><%= booking.rejectionReason %></p>
+        </div>
+      <% } %>
+
+      <!-- Security QR Verification & Terms -->
+      <div class="pt-6 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div class="space-y-1 text-xs text-slate-500">
+          <p class="font-bold text-slate-800">Security Gate & AV Verification</p>
+          <p class="text-[11px] leading-relaxed max-w-md">
+            Present this digital or printed pass to campus security and the audio-visual technician upon arrival.
+          </p>
+        </div>
+
+        <!-- QR Code Simulation Graphic -->
+        <div class="p-3 bg-white rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 shrink-0">
+          <div class="w-16 h-16 bg-slate-900 rounded-xl flex items-center justify-center text-white text-3xl font-mono">
+            <i class="fa-solid fa-qrcode"></i>
+          </div>
+          <div class="text-[10px] font-mono text-slate-400">
+            <span class="block font-bold text-slate-700">SCAN VERIFIED</span>
+            <span><%= booking.bookingReference %></span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- Cancel Booking Modal -->
+<div id="cancelModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl animate-fade-in border border-slate-200">
+    <div class="flex items-center justify-between">
+      <h3 class="font-heading font-extrabold text-lg text-slate-900">Cancel Booking</h3>
+      <button onclick="closeCancelModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+    </div>
+    <p class="text-xs text-slate-600">
+      Are you sure you want to cancel booking <strong class="text-slate-900"><%= booking.bookingReference %></strong>? This will release the venue slot for other campus organisers.
+    </p>
+    <form action="/bookings/<%= booking._id %>/cancel" method="POST" class="space-y-4">
+      <div>
+        <label for="reason" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+          Cancellation Reason
+        </label>
+        <textarea 
+          name="reason" 
+          id="reason" 
+          rows="2"
+          placeholder="Reason for cancellation..."
+          class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-500"
+        ></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <button type="button" onclick="closeCancelModal()" class="py-2.5 px-4 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">
+          Keep Booking
+        </button>
+        <button type="submit" class="py-2.5 px-4 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition-colors">
+          Confirm Cancellation
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function openCancelModal() {
+    document.getElementById('cancelModal').classList.remove('hidden');
+  }
+  function closeCancelModal() {
+    document.getElementById('cancelModal').classList.add('hidden');
+  }
+</script>
+
+<%- include('../partials/footer') %>

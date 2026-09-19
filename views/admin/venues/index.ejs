@@ -1,0 +1,118 @@
+<%- include('../../partials/header') %>
+<%- include('../../partials/navbar') %>
+<%- include('../../partials/alerts') %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-6">
+  
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100 text-indigo-800 text-xs font-bold mb-1">
+        <i class="fa-solid fa-building-columns"></i> Venue Management
+      </div>
+      <h1 class="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900 tracking-tight">
+        Campus Venues Inventory
+      </h1>
+      <p class="text-xs text-slate-500">
+        Create, edit, configure operating hours, and manage availability of campus facilities.
+      </p>
+    </div>
+
+    <a href="/admin/venues/new" class="py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-500/20 transition-all hover:scale-105 flex items-center gap-1.5 self-start sm:self-auto">
+      <i class="fa-solid fa-plus text-xs"></i> Add New Venue
+    </a>
+  </div>
+
+  <!-- Venues Table Card -->
+  <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+    <% if (venues && venues.length > 0) { %>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 border-b border-slate-200">
+            <tr>
+              <th class="py-3.5 px-4">Venue Code / Name</th>
+              <th class="py-3.5 px-4">Category</th>
+              <th class="py-3.5 px-4">Capacity</th>
+              <th class="py-3.5 px-4">Hourly Rate</th>
+              <th class="py-3.5 px-4">Location</th>
+              <th class="py-3.5 px-4">Status</th>
+              <th class="py-3.5 px-4">Total Bookings</th>
+              <th class="py-3.5 px-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <% venues.forEach(v => { %>
+              <tr class="hover:bg-slate-50/70 transition-colors">
+                
+                <td class="py-4 px-4">
+                  <span class="font-mono text-[10px] font-extrabold text-indigo-600 block"><%= v.code %></span>
+                  <a href="/venues/<%= v._id %>" class="font-bold text-slate-900 hover:text-indigo-600 text-sm block">
+                    <%= v.name %>
+                  </a>
+                </td>
+
+                <td class="py-4 px-4 text-slate-700 font-medium">
+                  <%= v.category %>
+                </td>
+
+                <td class="py-4 px-4 font-bold text-slate-900">
+                  <%= v.capacity %> Seats
+                </td>
+
+                <td class="py-4 px-4 font-extrabold text-emerald-600 text-sm">
+                  $<%= v.hourlyRate %>/hr
+                </td>
+
+                <td class="py-4 px-4 text-slate-500 text-[11px]">
+                  <%= v.location %> (<%= v.floor %>)
+                </td>
+
+                <td class="py-4 px-4">
+                  <% if (v.status === 'active') { %>
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                      Active
+                    </span>
+                  <% } else if (v.status === 'maintenance') { %>
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                      Maintenance
+                    </span>
+                  <% } else { %>
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">
+                      Inactive
+                    </span>
+                  <% } %>
+                </td>
+
+                <td class="py-4 px-4 font-semibold text-slate-700">
+                  <%= v.bookingsCount %> Bookings
+                </td>
+
+                <td class="py-4 px-4 text-right whitespace-nowrap space-x-2">
+                  <a href="/admin/venues/<%= v._id %>/edit" class="inline-flex items-center gap-1 py-1.5 px-3 rounded-lg text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors">
+                    <i class="fa-solid fa-pen-to-square text-[11px]"></i> Edit
+                  </a>
+                  <form action="/admin/venues/<%= v._id %>/delete" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to remove or archive this venue?');">
+                    <button type="submit" class="inline-flex items-center gap-1 py-1.5 px-2.5 rounded-lg text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors">
+                      <i class="fa-solid fa-trash text-[11px]"></i>
+                    </button>
+                  </form>
+                </td>
+
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <div class="p-12 text-center space-y-4">
+        <p class="text-xs text-slate-500">No venues configured yet. Click "Add New Venue" to list your first campus hall.</p>
+        <a href="/admin/venues/new" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700">
+          Add First Venue
+        </a>
+      </div>
+    <% } %>
+  </div>
+
+</div>
+
+<%- include('../../partials/footer') %>

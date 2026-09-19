@@ -1,0 +1,35 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 w-full">
+  <% if (typeof success_msg !== 'undefined' && success_msg.length > 0) { %>
+    <div class="flex items-center justify-between p-4 mb-4 text-emerald-800 border border-emerald-200 bg-emerald-50 rounded-2xl shadow-sm animate-fade-in" role="alert">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+          <i class="fa-solid fa-circle-check text-base"></i>
+        </div>
+        <div>
+          <h4 class="text-sm font-bold text-emerald-900">Success</h4>
+          <p class="text-xs font-medium text-emerald-700"><%= success_msg %></p>
+        </div>
+      </div>
+      <button type="button" onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-800 p-1.5 rounded-lg hover:bg-emerald-100/50 transition-colors">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+  <% } %>
+
+  <% if (typeof error_msg !== 'undefined' && error_msg.length > 0) { %>
+    <div class="flex items-center justify-between p-4 mb-4 text-rose-800 border border-rose-200 bg-rose-50 rounded-2xl shadow-sm animate-fade-in" role="alert">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
+          <i class="fa-solid fa-circle-exclamation text-base"></i>
+        </div>
+        <div>
+          <h4 class="text-sm font-bold text-rose-900">Notice</h4>
+          <p class="text-xs font-medium text-rose-700"><%= error_msg %></p>
+        </div>
+      </div>
+      <button type="button" onclick="this.parentElement.remove()" class="text-rose-500 hover:text-rose-800 p-1.5 rounded-lg hover:bg-rose-100/50 transition-colors">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+  <% } %>
+</div>

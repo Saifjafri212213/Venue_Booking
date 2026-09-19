@@ -1,0 +1,374 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+<%- include('../partials/alerts') %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
+  
+  <!-- Top Admin Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100 text-indigo-800 text-xs font-bold mb-1">
+        <i class="fa-solid fa-shield-halved"></i> Venue Manager & Admin Control
+      </div>
+      <h1 class="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900 tracking-tight">
+        Campus Venue Operations Dashboard
+      </h1>
+      <p class="text-xs text-slate-500">
+        Monitor live schedules, approve incoming reservations, manage maintenance blocks, and analyze utilization rates.
+      </p>
+    </div>
+
+    <!-- Quick Shortcuts -->
+    <div class="flex flex-wrap items-center gap-2">
+      <a href="/admin/venues/new" class="py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-500/20 transition-all hover:scale-105 flex items-center gap-1.5">
+        <i class="fa-solid fa-plus text-xs"></i> Add Venue
+      </a>
+      <a href="/admin/bookings" class="py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 shadow-sm transition-all hover:scale-105 flex items-center gap-1.5">
+        <i class="fa-solid fa-clipboard-check text-indigo-600"></i> Approvals Inbox (<%= metrics.pendingRequestsCount %>)
+      </a>
+      <a href="/admin/maintenance" class="py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 shadow-sm transition-all hover:scale-105 flex items-center gap-1.5">
+        <i class="fa-solid fa-screwdriver-wrench text-amber-500"></i> Block Maintenance
+      </a>
+    </div>
+  </div>
+
+  <!-- Key Operational KPI Cards -->
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+    
+    <div class="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm">
+      <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Total Venues</span>
+      <div class="text-2xl font-extrabold text-slate-900 font-heading mt-1"><%= metrics.totalVenues %></div>
+      <span class="text-[10px] text-emerald-600 font-semibold mt-0.5 block"><%= metrics.activeVenues %> Active Halls</span>
+    </div>
+
+    <div class="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm">
+      <span class="text-[10px] font-bold uppercase tracking-wider text-amber-600 block">Pending Requests</span>
+      <div class="text-2xl font-extrabold text-amber-600 font-heading mt-1"><%= metrics.pendingRequestsCount %></div>
+      <span class="text-[10px] text-slate-400 font-semibold mt-0.5 block">Requires review</span>
+    </div>
+
+    <div class="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm">
+      <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 block">Today's Events</span>
+      <div class="text-2xl font-extrabold text-emerald-600 font-heading mt-1 flex items-center gap-1.5">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        <%= metrics.todayEventsCount %>
+      </div>
+      <span class="text-[10px] text-slate-400 font-semibold mt-0.5 block">Happening today</span>
+    </div>
+
+    <div class="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm">
+      <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 block">Approved Bookings</span>
+      <div class="text-2xl font-extrabold text-indigo-600 font-heading mt-1"><%= metrics.approvedBookingsCount %></div>
+      <span class="text-[10px] text-slate-400 font-semibold mt-0.5 block">Confirmed schedule</span>
+    </div>
+
+    <div class="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm">
+      <span class="text-[10px] font-bold uppercase tracking-wider text-slate-600 block">Total Revenue</span>
+      <div class="text-2xl font-extrabold text-slate-900 font-heading mt-1">$<%= metrics.totalRevenue %></div>
+      <span class="text-[10px] text-emerald-600 font-semibold mt-0.5 block">+$<%= metrics.pendingRevenue %> pending</span>
+    </div>
+
+    <div class="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm">
+      <span class="text-[10px] font-bold uppercase tracking-wider text-brand-600 block">Avg Utilisation</span>
+      <div class="text-2xl font-extrabold text-brand-600 font-heading mt-1"><%= metrics.avgUtilization %>%</div>
+      <span class="text-[10px] text-slate-400 font-semibold mt-0.5 block">Campus halls load</span>
+    </div>
+
+  </div>
+
+  <!-- Today's Schedule Feed & Pending Approvals Split -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    
+    <!-- Today's Events Schedule -->
+    <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-heading font-bold text-lg text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-calendar-day text-emerald-600"></i> Today's Live Campus Schedule
+        </h3>
+        <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
+          <%= new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) %>
+        </span>
+      </div>
+
+      <% if (todayEvents && todayEvents.length > 0) { %>
+        <div class="divide-y divide-slate-100">
+          <% todayEvents.forEach(evt => { %>
+            <div class="py-3.5 flex items-center justify-between gap-3 text-xs">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700"><%= evt.venue ? evt.venue.code : 'HALL' %></span>
+                  <span class="font-bold text-slate-900"><%= evt.eventTitle %></span>
+                </div>
+                <p class="text-slate-500 text-[11px]">
+                  Host: <strong class="text-slate-700"><%= evt.organiser ? evt.organiser.name : 'Unknown' %></strong> (<%= evt.organiser ? evt.organiser.organization : '' %>)
+                </p>
+              </div>
+              <div class="text-right shrink-0">
+                <span class="font-mono font-bold text-slate-800 bg-slate-100 px-2.5 py-1 rounded-lg block">
+                  <%= evt.startTime %> - <%= evt.endTime %>
+                </span>
+                <span class="text-[10px] text-slate-400 mt-0.5 block"><%= evt.expectedAttendees %> Attendees</span>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <div class="p-8 rounded-2xl bg-slate-50 text-center text-xs text-slate-500 space-y-2">
+          <i class="fa-regular fa-calendar-check text-2xl text-slate-400 block"></i>
+          <span>No events scheduled for today. Campus halls are open for maintenance or rehearsals.</span>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- Pending Requests for Fast Approval -->
+    <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-heading font-bold text-lg text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-inbox text-amber-500"></i> Pending Booking Requests
+        </h3>
+        <a href="/admin/bookings?status=Pending" class="text-xs font-bold text-indigo-600 hover:underline">View All &rarr;</a>
+      </div>
+
+      <% if (pendingBookings && pendingBookings.length > 0) { %>
+        <div class="divide-y divide-slate-100">
+          <% pendingBookings.forEach(req => { %>
+            <div class="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div class="space-y-0.5">
+                <div class="flex items-center gap-1.5">
+                  <span class="font-mono text-[10px] font-bold text-brand-600"><%= req.bookingReference %></span>
+                  <span class="font-bold text-slate-900"><%= req.eventTitle %></span>
+                </div>
+                <p class="text-slate-600 text-[11px]">
+                  <%= req.venue ? req.venue.name : 'N/A' %> • 
+                  <%= new Date(req.bookingDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %> (<%= req.startTime %>-<%= req.endTime %>)
+                </p>
+                <p class="text-slate-400 text-[10px]">
+                  By: <%= req.organiser ? req.organiser.name : 'Organiser' %> • <%= req.expectedAttendees %> Pax • $<%= req.totalCost %>
+                </p>
+              </div>
+
+              <div class="flex items-center gap-2 shrink-0">
+                <form action="/admin/bookings/<%= req._id %>/approve" method="POST" class="inline">
+                  <button type="submit" class="py-1 px-2.5 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
+                    Approve
+                  </button>
+                </form>
+                <button type="button" onclick="openRejectModal('<%= req._id %>', '<%= req.bookingReference %>')" class="py-1 px-2.5 rounded-lg text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors">
+                  Reject
+                </button>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <div class="p-8 rounded-2xl bg-slate-50 text-center text-xs text-slate-500 space-y-2">
+          <i class="fa-solid fa-check-double text-2xl text-emerald-500 block"></i>
+          <span>Approval inbox is all clear! No pending booking requests at this time.</span>
+        </div>
+      <% } %>
+    </div>
+
+  </div>
+
+  <!-- Interactive Charts: Venue Utilisation & Revenue -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    
+    <!-- Utilisation Chart -->
+    <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="font-heading font-bold text-base text-slate-900">Venue Utilization Rate (%)</h3>
+          <p class="text-xs text-slate-400">Total booked hours relative to 30-day operating capacity</p>
+        </div>
+        <i class="fa-solid fa-chart-column text-indigo-500"></i>
+      </div>
+      <div class="h-64 relative">
+        <canvas id="utilizationChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Revenue Chart -->
+    <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="font-heading font-bold text-base text-slate-900">Revenue per Venue ($)</h3>
+          <p class="text-xs text-slate-400">Total earnings generated from approved & completed bookings</p>
+        </div>
+        <i class="fa-solid fa-dollar-sign text-emerald-500"></i>
+      </div>
+      <div class="h-64 relative">
+        <canvas id="revenueChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Venue Utilization & Performance Table -->
+  <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden space-y-4 p-6 sm:p-8">
+    <div class="flex items-center justify-between">
+      <div>
+        <h3 class="font-heading font-bold text-lg text-slate-900">Venue Operations & Utilization Breakdown</h3>
+        <p class="text-xs text-slate-500">Detailed metric breakdown across all campus halls</p>
+      </div>
+      <a href="/admin/venues" class="text-xs font-bold text-indigo-600 hover:underline">Manage All Venues &rarr;</a>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead class="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 border-b border-slate-200">
+          <tr>
+            <th class="py-3 px-3">Venue Code / Name</th>
+            <th class="py-3 px-3">Category</th>
+            <th class="py-3 px-3">Capacity</th>
+            <th class="py-3 px-3">Bookings</th>
+            <th class="py-3 px-3">Booked Hours</th>
+            <th class="py-3 px-3">Revenue</th>
+            <th class="py-3 px-3">Utilization</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          <% venueStats.forEach(v => { %>
+            <tr class="hover:bg-slate-50/60 transition-colors">
+              <td class="py-3 px-3">
+                <span class="font-mono text-[10px] font-extrabold text-indigo-600 block"><%= v.code %></span>
+                <span class="font-bold text-slate-900"><%= v.name %></span>
+              </td>
+              <td class="py-3 px-3 text-slate-600"><%= v.category %></td>
+              <td class="py-3 px-3 font-semibold text-slate-700"><%= v.capacity %> Seats</td>
+              <td class="py-3 px-3 font-bold text-slate-800"><%= v.totalBookings %></td>
+              <td class="py-3 px-3 text-slate-600"><%= v.totalHours %> hrs</td>
+              <td class="py-3 px-3 font-extrabold text-emerald-600">$<%= v.revenue %></td>
+              <td class="py-3 px-3">
+                <div class="flex items-center gap-2">
+                  <div class="w-16 bg-slate-200 rounded-full h-2 overflow-hidden">
+                    <div class="bg-indigo-600 h-2 rounded-full" style="width: <%= Math.min(100, v.utilizationRate) %>%"></div>
+                  </div>
+                  <span class="font-bold text-slate-700 text-[11px]"><%= v.utilizationRate %>%</span>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Reject Modal -->
+<div id="rejectModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl animate-fade-in border border-slate-200">
+    <div class="flex items-center justify-between">
+      <h3 class="font-heading font-extrabold text-lg text-slate-900">Reject Booking Request</h3>
+      <button onclick="closeRejectModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+    </div>
+    <p class="text-xs text-slate-600">
+      Please provide a reason for rejecting booking <strong id="rejectModalRef" class="text-slate-900"></strong>. This will be visible on the organiser's pass.
+    </p>
+    <form id="rejectForm" action="" method="POST" class="space-y-4">
+      <div>
+        <label for="rejectionReason" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+          Rejection Reason *
+        </label>
+        <textarea 
+          name="rejectionReason" 
+          id="rejectionReason" 
+          required
+          rows="3"
+          placeholder="e.g. Venue booked for university examinations or conflicting internal event..."
+          class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-500"
+        ></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <button type="button" onclick="closeRejectModal()" class="py-2.5 px-4 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">
+          Cancel
+        </button>
+        <button type="submit" class="py-2.5 px-4 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition-colors">
+          Reject Request
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Chart.js Scripts -->
+<script>
+  function openRejectModal(bookingId, reference) {
+    document.getElementById('rejectForm').action = '/admin/bookings/' + bookingId + '/reject';
+    document.getElementById('rejectModalRef').textContent = reference;
+    document.getElementById('rejectModal').classList.remove('hidden');
+  }
+  function closeRejectModal() {
+    document.getElementById('rejectModal').classList.add('hidden');
+  }
+
+  // Chart Rendering
+  document.addEventListener('DOMContentLoaded', () => {
+    const labels = <%- chartData.labels %>;
+    const utilData = <%- chartData.utilization %>;
+    const revData = <%- chartData.revenue %>;
+
+    // Utilisation Chart
+    const ctxUtil = document.getElementById('utilizationChart');
+    if (ctxUtil) {
+      new Chart(ctxUtil, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Utilization %',
+            data: utilData,
+            backgroundColor: 'rgba(99, 102, 241, 0.85)',
+            borderColor: 'rgb(79, 70, 229)',
+            borderWidth: 1,
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              ticks: { callback: (v) => v + '%' }
+            }
+          }
+        }
+      });
+    }
+
+    // Revenue Chart
+    const ctxRev = document.getElementById('revenueChart');
+    if (ctxRev) {
+      new Chart(ctxRev, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Revenue ($)',
+            data: revData,
+            backgroundColor: 'rgba(16, 185, 129, 0.85)',
+            borderColor: 'rgb(5, 150, 105)',
+            borderWidth: 1,
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { callback: (v) => '$' + v }
+            }
+          }
+        }
+      });
+    }
+  });
+</script>
+
+<%- include('../partials/footer') %>

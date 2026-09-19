@@ -1,0 +1,224 @@
+<%- include('../../partials/header') %>
+<%- include('../../partials/navbar') %>
+<%- include('../../partials/alerts') %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-6">
+  
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100 text-indigo-800 text-xs font-bold mb-1">
+        <i class="fa-solid fa-clipboard-check"></i> Approvals Inbox
+      </div>
+      <h1 class="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900 tracking-tight">
+        Booking Requests & Approval Workflow
+      </h1>
+      <p class="text-xs text-slate-500">
+        Review organiser reservations, approve slots, log rejection reasons, or complete events.
+      </p>
+    </div>
+
+    <!-- Venue Filter Form -->
+    <form action="/admin/bookings" method="GET" class="flex items-center gap-2 self-start sm:self-auto">
+      <input type="hidden" name="status" value="<%= currentFilter.status %>">
+      <select 
+        name="venueId" 
+        onchange="this.form.submit()"
+        class="px-3 py-2 text-xs font-semibold rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 bg-white"
+      >
+        <option value="All">All Campus Venues</option>
+        <% venues.forEach(v => { %>
+          <option value="<%= v._id %>" <%= currentFilter.venueId === v._id.toString() ? 'selected' : '' %>>
+            <%= v.name %> (<%= v.code %>)
+          </option>
+        <% }) %>
+      </select>
+    </form>
+  </div>
+
+  <!-- Status Tabs -->
+  <div class="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-200">
+    <a href="/admin/bookings?venueId=<%= currentFilter.venueId %>" class="px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors <%= currentFilter.status === 'All' ? 'bg-slate-900 text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-100' %>">
+      All Requests (<%= statusCounts.all %>)
+    </a>
+    <a href="/admin/bookings?status=Pending&venueId=<%= currentFilter.venueId %>" class="px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors <%= currentFilter.status === 'Pending' ? 'bg-amber-600 text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-100' %>">
+      Pending (<%= statusCounts.pending %>)
+    </a>
+    <a href="/admin/bookings?status=Approved&venueId=<%= currentFilter.venueId %>" class="px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors <%= currentFilter.status === 'Approved' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-100' %>">
+      Approved (<%= statusCounts.approved %>)
+    </a>
+    <a href="/admin/bookings?status=Completed&venueId=<%= currentFilter.venueId %>" class="px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors <%= currentFilter.status === 'Completed' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-100' %>">
+      Completed (<%= statusCounts.completed %>)
+    </a>
+    <a href="/admin/bookings?status=Rejected&venueId=<%= currentFilter.venueId %>" class="px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors <%= currentFilter.status === 'Rejected' ? 'bg-rose-600 text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-100' %>">
+      Rejected (<%= statusCounts.rejected %>)
+    </a>
+    <a href="/admin/bookings?status=Cancelled&venueId=<%= currentFilter.venueId %>" class="px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors <%= currentFilter.status === 'Cancelled' ? 'bg-slate-600 text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-100' %>">
+      Cancelled (<%= statusCounts.cancelled %>)
+    </a>
+  </div>
+
+  <!-- Bookings Management Table -->
+  <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+    <% if (bookings && bookings.length > 0) { %>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 border-b border-slate-200">
+            <tr>
+              <th class="py-3.5 px-4">Ref / Event</th>
+              <th class="py-3.5 px-4">Organiser</th>
+              <th class="py-3.5 px-4">Venue</th>
+              <th class="py-3.5 px-4">Date & Time</th>
+              <th class="py-3.5 px-4">Attendees</th>
+              <th class="py-3.5 px-4">Cost</th>
+              <th class="py-3.5 px-4">Status</th>
+              <th class="py-3.5 px-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <% bookings.forEach(b => { %>
+              <tr class="hover:bg-slate-50/70 transition-colors">
+                
+                <td class="py-4 px-4">
+                  <span class="font-mono text-[10px] font-extrabold text-indigo-600 block"><%= b.bookingReference %></span>
+                  <span class="font-bold text-slate-900 text-sm block"><%= b.eventTitle %></span>
+                  <span class="text-[10px] text-slate-400"><%= b.eventType %></span>
+                </td>
+
+                <td class="py-4 px-4">
+                  <span class="font-bold text-slate-800 block"><%= b.organiser ? b.organiser.name : 'Unknown' %></span>
+                  <span class="text-[11px] text-slate-500 block"><%= b.organiser ? b.organiser.organization : '' %></span>
+                  <span class="text-[10px] text-slate-400"><%= b.organiser ? b.organiser.email : '' %></span>
+                </td>
+
+                <td class="py-4 px-4">
+                  <span class="font-bold text-slate-800 block"><%= b.venue ? b.venue.name : 'N/A' %></span>
+                  <span class="font-mono text-[10px] text-slate-400"><%= b.venue ? b.venue.code : '' %></span>
+                </td>
+
+                <td class="py-4 px-4 whitespace-nowrap">
+                  <span class="font-semibold text-slate-800 block">
+                    <i class="fa-regular fa-calendar text-[10px] text-slate-400 mr-1"></i>
+                    <%= new Date(b.bookingDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                  </span>
+                  <span class="font-mono text-[11px] text-slate-500"><%= b.startTime %> - <%= b.endTime %></span>
+                </td>
+
+                <td class="py-4 px-4 font-semibold text-slate-700">
+                  <%= b.expectedAttendees %> Pax
+                </td>
+
+                <td class="py-4 px-4 font-extrabold text-emerald-600 text-sm">
+                  $<%= b.totalCost %>
+                </td>
+
+                <td class="py-4 px-4">
+                  <% if (b.status === 'Approved') { %>
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800">
+                      Approved
+                    </span>
+                  <% } else if (b.status === 'Pending') { %>
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                      Pending
+                    </span>
+                  <% } else if (b.status === 'Completed') { %>
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                      Completed
+                    </span>
+                  <% } else if (b.status === 'Rejected') { %>
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">
+                      Rejected
+                    </span>
+                  <% } else { %>
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
+                      <%= b.status %>
+                    </span>
+                  <% } %>
+                </td>
+
+                <td class="py-4 px-4 text-right whitespace-nowrap space-x-1.5">
+                  <% if (b.status === 'Pending') { %>
+                    <form action="/admin/bookings/<%= b._id %>/approve" method="POST" class="inline">
+                      <button type="submit" class="py-1 px-2.5 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
+                        Approve
+                      </button>
+                    </form>
+                    <button type="button" onclick="openRejectModal('<%= b._id %>', '<%= b.bookingReference %>')" class="py-1 px-2.5 rounded-lg text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors">
+                      Reject
+                    </button>
+                  <% } else if (b.status === 'Approved') { %>
+                    <form action="/admin/bookings/<%= b._id %>/status" method="POST" class="inline">
+                      <input type="hidden" name="status" value="Completed">
+                      <button type="submit" class="py-1 px-2.5 rounded-lg text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors">
+                        Mark Done
+                      </button>
+                    </form>
+                  <% } %>
+
+                  <a href="/bookings/<%= b._id %>" class="inline-block py-1 px-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100">
+                    <i class="fa-solid fa-eye text-[11px]"></i>
+                  </a>
+                </td>
+
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <div class="p-12 text-center space-y-4">
+        <p class="text-xs text-slate-500">No booking requests found matching the current filter.</p>
+      </div>
+    <% } %>
+  </div>
+
+</div>
+
+<!-- Reject Modal -->
+<div id="rejectModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl animate-fade-in border border-slate-200">
+    <div class="flex items-center justify-between">
+      <h3 class="font-heading font-extrabold text-lg text-slate-900">Reject Booking Request</h3>
+      <button onclick="closeRejectModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+    </div>
+    <p class="text-xs text-slate-600">
+      Please provide a reason for rejecting booking <strong id="rejectModalRef" class="text-slate-900"></strong>:
+    </p>
+    <form id="rejectForm" action="" method="POST" class="space-y-4">
+      <div>
+        <label for="rejectionReason" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+          Rejection Reason *
+        </label>
+        <textarea 
+          name="rejectionReason" 
+          id="rejectionReason" 
+          required
+          rows="3"
+          placeholder="e.g. Venue unavailable or scheduled campus renovation..."
+          class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-500"
+        ></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <button type="button" onclick="closeRejectModal()" class="py-2.5 px-4 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors">
+          Cancel
+        </button>
+        <button type="submit" class="py-2.5 px-4 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition-colors">
+          Reject Request
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function openRejectModal(bookingId, reference) {
+    document.getElementById('rejectForm').action = '/admin/bookings/' + bookingId + '/reject';
+    document.getElementById('rejectModalRef').textContent = reference;
+    document.getElementById('rejectModal').classList.remove('hidden');
+  }
+  function closeRejectModal() {
+    document.getElementById('rejectModal').classList.add('hidden');
+  }
+</script>
+
+<%- include('../../partials/footer') %>
