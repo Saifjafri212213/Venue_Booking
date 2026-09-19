@@ -15,8 +15,16 @@ const User = require('./models/User');
 // Initialize Express App
 const app = express();
 
-// Connect to MongoDB Database
-connectDB();
+// Ensure Database Connection Middleware for Serverless & Local
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('Database connection middleware error:', err.message);
+    next();
+  }
+});
 
 // Setup EJS Template Engine
 app.set('view engine', 'ejs');
@@ -141,10 +149,15 @@ app.use((req, res) => {
   });
 });
 
-// Start Server
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-  console.log(`=================================================`);
-  console.log(`🏛️  Campus Venue & Event Server running on http://localhost:${PORT}`);
-  console.log(`=================================================`);
-});
+// Start Server locally if run directly
+if (require.main === module || !process.env.VERCEL) {
+  const PORT = process.env.PORT || 4000;
+  app.listen(PORT, () => {
+    console.log(`=================================================`);
+    console.log(`🏛️  Campus Venue & Event Server running on http://localhost:${PORT}`);
+    console.log(`=================================================`);
+  });
+}
+
+// Export for Vercel Serverless
+module.exports = app;

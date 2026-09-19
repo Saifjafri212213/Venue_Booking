@@ -157,10 +157,21 @@ exports.postRegister = async (req, res) => {
     }
   } catch (error) {
     console.error('Registration error:', error);
+    let errorMessage = 'Registration failed. Please verify your details.';
+    if (error.code === 11000) {
+      errorMessage = 'An account with this email address already exists. Please sign in.';
+    } else if (error.name === 'ValidationError') {
+      errorMessage = Object.values(error.errors).map((e) => e.message).join(', ');
+    } else if (error.message && (error.message.includes('buffering timed out') || error.message.includes('ECONNREFUSED') || error.name === 'MongooseServerSelectionError')) {
+      errorMessage = 'Database connection error. Please ensure the MONGO_URI environment variable is configured in Vercel settings.';
+    } else if (error.message) {
+      errorMessage = `Registration error: ${error.message}`;
+    }
+
     res.render('auth/register', {
       title: 'Create Account - Venue & Event Management System',
       formData: req.body,
-      error_msg: 'Registration failed due to a server error. Please verify your details.'
+      error_msg: errorMessage
     });
   }
 };
