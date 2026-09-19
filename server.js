@@ -95,9 +95,9 @@ app.get('/', async (req, res) => {
     res.render('index', {
       title: 'Campus Event & Venue Booking Management System',
       stats: {
-        totalVenues: totalVenues || 8,
-        totalBookings: totalBookings || 35,
-        totalOrganisers: totalOrganisers || 14,
+        totalVenues: totalVenues || 0,
+        totalBookings: totalBookings || 0,
+        totalOrganisers: totalOrganisers || 0,
         todayEventsCount: todayEvents.length
       },
       todayEvents,
@@ -109,10 +109,10 @@ app.get('/', async (req, res) => {
     res.render('index', {
       title: 'Campus Event & Venue Booking Management System',
       stats: {
-        totalVenues: 8,
-        totalBookings: 25,
-        totalOrganisers: 10,
-        todayEventsCount: 2
+        totalVenues: 0,
+        totalBookings: 0,
+        totalOrganisers: 0,
+        todayEventsCount: 0
       },
       todayEvents: [],
       featuredVenues: [],
