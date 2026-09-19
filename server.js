@@ -149,6 +149,22 @@ app.use((req, res) => {
   });
 });
 
+// Global Error Handler Middleware
+app.use((err, req, res, next) => {
+  console.error('Unhandled Application Error:', err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  res.status(500).render('index', {
+    title: '500 - Application Error',
+    error_msg: err.message || 'An internal error occurred. Please try again.',
+    stats: { totalVenues: 0, totalBookings: 0, totalOrganisers: 0, todayEventsCount: 0 },
+    todayEvents: [],
+    featuredVenues: [],
+    recentApproved: []
+  });
+});
+
 // Start Server locally if run directly
 if (require.main === module || !process.env.VERCEL) {
   const PORT = process.env.PORT || 4000;

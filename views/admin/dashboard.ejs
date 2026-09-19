@@ -304,9 +304,9 @@
 
   // Chart Rendering
   document.addEventListener('DOMContentLoaded', () => {
-    const labels = <%- chartData.labels %>;
-    const utilData = <%- chartData.utilization %>;
-    const revData = <%- chartData.revenue %>;
+    const labels = <%- typeof chartData !== 'undefined' && chartData.labels ? chartData.labels : (typeof charts !== 'undefined' && charts.labels ? charts.labels : '[]') %>;
+    const utilData = <%- typeof chartData !== 'undefined' && chartData.utilization ? chartData.utilization : (typeof charts !== 'undefined' && charts.utilization ? charts.utilization : '[]') %>;
+    const revData = <%- typeof chartData !== 'undefined' && chartData.revenue ? chartData.revenue : (typeof charts !== 'undefined' && charts.revenue ? charts.revenue : '[]') %>;
 
     // Utilisation Chart
     const ctxUtil = document.getElementById('utilizationChart');

@@ -31,7 +31,7 @@ router.post('/bookings/:id/status', adminController.postUpdateBookingStatus);
 router.get('/payment-settings', adminController.getPaymentSettings);
 router.post(
   '/payment-settings',
-  upload.single('customQrImage'),
+  upload.single('qrImage'),
   adminController.postSavePaymentSettings
 );
 

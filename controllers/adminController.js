@@ -101,9 +101,18 @@ exports.getDashboard = async (req, res) => {
       };
     });
 
+    const totalUtil = venueStats.reduce((sum, v) => sum + v.utilizationRate, 0);
+    const avgUtilization = venueStats.length > 0 ? Math.round(totalUtil / venueStats.length) : 0;
+
     const chartLabels = venueStats.map((v) => v.code || v.name.substring(0, 12));
     const chartUtilization = venueStats.map((v) => v.utilizationRate);
     const chartRevenue = venueStats.map((v) => v.revenue);
+
+    const chartPayload = {
+      labels: JSON.stringify(chartLabels),
+      utilization: JSON.stringify(chartUtilization),
+      revenue: JSON.stringify(chartRevenue)
+    };
 
     res.render('admin/dashboard', {
       title: 'Admin Control Center - Campus Venue Booking',
@@ -117,17 +126,15 @@ exports.getDashboard = async (req, res) => {
         pendingVerificationCount,
         totalRevenue,
         pendingRevenue,
+        avgUtilization,
         todayEventsCount: todayEvents.length
       },
       pendingBookings,
       upcomingEvents,
       todayEvents,
       venueStats,
-      charts: {
-        labels: JSON.stringify(chartLabels),
-        utilization: JSON.stringify(chartUtilization),
-        revenue: JSON.stringify(chartRevenue)
-      }
+      chartData: chartPayload,
+      charts: chartPayload
     });
   } catch (error) {
     console.error('Error in Admin Dashboard controller:', error);
